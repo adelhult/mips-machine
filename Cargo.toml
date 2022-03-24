@@ -1,0 +1,12 @@
+[package]
+name = "mips_machine"
+version = "0.1.0"
+edition = "2021"
+author = "Eli Adelhult"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clap = { version = "3.1.6", features = ["derive"] }
+colour = "0.6.0"
+read_input = "0.8.6"
