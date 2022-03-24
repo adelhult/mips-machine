@@ -68,10 +68,10 @@ fn step(machine: &mut Machine) {
     match machine.step() {
         Err(error) => {
             let msg = report_error(error);
-            red_ln!("Error: {}", msg);
+            red_ln!("Error: {}.", msg);
         }
-        Ok(instruction) => println!("Executed {:?}", instruction),
-    }
+        Ok(instruction) => println!("Executed {:?}\nIncremented pc to: {}", instruction, machine.read_pc()),
+    }   
 }
 
 fn help() {

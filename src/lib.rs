@@ -6,7 +6,7 @@ pub use self::instructions::*;
 pub const MEMORY_SIZE: usize = 1024;
 
 pub struct Machine {
-    pc: usize,
+    pc: u32,
     registers: [u32; 32],
     memory: [u8; MEMORY_SIZE],
 }
@@ -51,7 +51,11 @@ impl Machine {
 
     /// Set the program counter (PC) to a given value
     pub fn set_pc(&mut self, value: u32) {
-        self.pc = value as usize;
+        self.pc = value;
+    }
+
+    pub fn read_pc(&self) -> u32 {
+        self.pc
     }
 
     /// Read a word starting at the given address
@@ -73,7 +77,7 @@ impl Machine {
     /// Execute one instruction and increment the program counter.
     /// The function returns the instruction that was executed.
     pub fn step(&mut self) -> Result<Instruction, Error> {
-        let instruction: Instruction = self.read_word(self.pc).try_into()?;
+        let instruction: Instruction = self.read_word(self.pc as usize).try_into()?;
         match instruction {
             Instruction::Add(dest, source, target, _) => {
                 let sum = self.op(source, target, |a, b| (a as i32 + b as i32) as u32);
