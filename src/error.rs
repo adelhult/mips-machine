@@ -3,4 +3,5 @@
 pub enum Error {
     InvalidRegisterNumber(u32),
     InvalidInstruction(u32),
+    InstructionNotImplemented(String),
 }
