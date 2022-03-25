@@ -174,9 +174,15 @@ pub enum Instruction {
     /// Branch on Greater Than Zero
     Bgtz(Register, Register, i16),
     /// Divide
+    DivOLD(Register, Register, Register, u8),
     Div(Register, Register, Register, u8),
+    /// Mod
+    Mod(Register, Register, Register, u8),
     /// Unsigned Divide
+    DivuOLD(Register, Register, Register, u8),
     Divu(Register, Register, Register, u8),
+    /// Unsigned Mod
+    Modu(Register, Register, Register, u8),
     /// Jump to Address
     J(u32),
     /// Jump and Link
@@ -299,8 +305,16 @@ fn from_r_format(value: u32) -> Result<Instruction, Error> {
         0x20 => Some(Instruction::Add),
         0x21 => Some(Instruction::Addu),
         0x24 => Some(Instruction::And),
-        0x1A => Some(Instruction::Div),
-        0x1B => Some(Instruction::Divu),
+        0x1A => match shift { // MIPS32 version 6 operations
+            0x02 => Some(Instruction::Div),
+            0x03 => Some(Instruction::Mod),
+            _ => None // TODO: We don't handle DivOLD, the Div instruction before MIPS32 version 6
+        }
+        0x1B => match shift { // MIPS32 version 6 operations
+            0x02 => Some(Instruction::Divu),
+            0x03 => Some(Instruction::Modu),
+            _ => None // TODO: We don't handle DivuOLD, the Divu instruction before MIPS32 version 6
+        }
         0x09 => Some(Instruction::Jalr),
         0x08 => Some(Instruction::Jr),
         0x10 => Some(Instruction::Mfhi),
@@ -347,6 +361,7 @@ fn from_i_format(value: u32) -> Result<Instruction, Error> {
         0x07 => Some(Instruction::Bgtz),
         0x09 => Some(Instruction::Addiu),
         0x20 => Some(Instruction::Lb),
+        // TODO: saknas inte `Lh`? I guess many more.
         0x24 => Some(Instruction::Lbu),
         0x25 => Some(Instruction::Lhu),
         0x0F => Some(Instruction::Lui),
