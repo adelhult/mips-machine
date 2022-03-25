@@ -336,7 +336,7 @@ fn from_i_format(value: u32) -> Result<Instruction, Error> {
     let opcode = value >> 26;
     let source0_r = ((value >> 21) & MASK5).try_into()?;
     let source1_r = ((value >> 16) & MASK5).try_into()?;
-    let immediate = (value & 0xFF) as i16;
+    let immediate = (value & 0xFFFF) as i16;
 
     let instruction: Option<fn(Register, Register, i16) -> Instruction> = match opcode {
         0x08 => Some(Instruction::Addi),
