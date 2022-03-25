@@ -67,21 +67,21 @@ impl Machine {
     }
 
     /// Write a word starting at the given word-aligned address
-    pub fn write_word(&mut self, address: usize, word : u32) {
-        self.memory[address]     = word as u8;
+    pub fn write_word(&mut self, address: usize, word: u32) {
+        self.memory[address] = word as u8;
         self.memory[address + 1] = (word >> 8) as u8;
         self.memory[address + 2] = (word >> 16) as u8;
         self.memory[address + 3] = (word >> 24) as u8;
     }
 
     /// Write a halfword starting at the given halfword-aligned address
-    pub fn write_halfword(&mut self, address: usize, halfword : u16) {
+    pub fn write_halfword(&mut self, address: usize, halfword: u16) {
         self.memory[address] = halfword as u8;
         self.memory[address + 1] = (halfword >> 8) as u8;
     }
 
     /// Write a byte starting at the given address
-    pub fn write_byte(&mut self, address: usize, byte : u8) {
+    pub fn write_byte(&mut self, address: usize, byte: u8) {
         self.memory[address] = byte;
     }
 
@@ -231,7 +231,14 @@ impl Machine {
             }
 
             Instruction::Slt(rd, rt, rs, _) => {
-                self.set_register(rd, if (self.read_register(rs) as i32) < (self.read_register(rt) as i32) { 1 } else { 0 });
+                self.set_register(
+                    rd,
+                    if (self.read_register(rs) as i32) < (self.read_register(rt) as i32) {
+                        1
+                    } else {
+                        0
+                    },
+                );
             }
 
             Instruction::Slti(_, _, _) => {
@@ -301,7 +308,7 @@ mod tests {
 
     #[test]
     fn write_word() {
-        const BRUH : u32 = 0xFAFAFAFA;
+        const BRUH: u32 = 0xFAFAFAFA;
         let mut machine = Machine::new();
         machine.write_word(0, BRUH);
         assert_eq!(machine.read_word(0), BRUH);
@@ -312,7 +319,8 @@ mod tests {
         let mut machine = Machine::new();
         //let x: [u32; 7] = [0x3c011001,0x34210000,0x00011020,0x20010005,0xa4410000, 0x20010006, 0xa4410002];
         let x: &[u32] = &[0x20020100, 0x20030005, 0xa4430000, 0x20030006, 0xa4430002];
-        let v = x.iter()
+        let v = x
+            .iter()
             .copied()
             .map(|word| word.to_be_bytes().into_iter())
             .flatten()
