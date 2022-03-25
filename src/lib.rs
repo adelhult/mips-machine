@@ -79,127 +79,169 @@ impl Machine {
     pub fn step(&mut self) -> Result<Instruction, Error> {
         let instruction: Instruction = self.read_word(self.pc as usize).try_into()?;
         match instruction {
-            Instruction::Add(dest, source, target, _) => {
-                let sum = self.op(source, target, |a, b| (a as i32 + b as i32) as u32);
+            Instruction::Add(dest, source0, source1, _) => {
+                let sum = self.op(source0, source1, |a, b| (a as i32 + b as i32) as u32);
                 self.set_register(dest, sum);
             }
+
             Instruction::Addi(_, _, _) => {
                 return Err(Error::InstructionNotImplemented("addi".into()))
             }
+
             Instruction::Addiu(_, _, _) => {
                 return Err(Error::InstructionNotImplemented("addiu".into()))
             }
 
-            Instruction::Addu(dest, source, target, _) => {
-                let sum = self.op(source, target, |a, b| a + b);
+            Instruction::Addu(dest, source0, source1, _) => {
+                let sum = self.op(source0, source1, |a, b| a + b);
                 self.set_register(dest, sum);
             }
 
-            Instruction::And(dest, source, target, _) => {
-                self.set_register(dest, self.op(source, target, |a, b| a & b));
+            Instruction::And(dest, source0, source1, _) => {
+                self.set_register(dest, self.op(source0, source1, |a, b| a & b));
             }
-            Instruction::Andi(_, _, _) => {
-                return Err(Error::InstructionNotImplemented("andi".into()))
+
+            Instruction::Andi(dest, source0, constant) => {
+                self.set_register(dest, self.read_register(source0) & constant as u32);
             }
+
             Instruction::Beq(_, _, _) => {
                 return Err(Error::InstructionNotImplemented("beq".into()))
             }
+
             Instruction::Blez(_, _, _) => {
                 return Err(Error::InstructionNotImplemented("blez".into()))
             }
+
             Instruction::Bne(_, _, _) => {
                 return Err(Error::InstructionNotImplemented("bne".into()))
             }
+
             Instruction::Bgtz(_, _, _) => {
                 return Err(Error::InstructionNotImplemented("bgtz".into()))
             }
-            Instruction::Div(_, _, _, _) => {
-                return Err(Error::InstructionNotImplemented("div".into()))
+
+            Instruction::Div(dest, source0, source1, _) => {
+                let result = self.op(source0, source1, |a, b| (a as i32 / b as i32) as u32);
+                self.set_register(dest, result);
             }
-            Instruction::Divu(_, _, _, _) => {
-                return Err(Error::InstructionNotImplemented("divu".into()))
+
+            Instruction::Divu(dest, source0, source1, _) => {
+                let result = self.op(source0, source1, |a, b| a / b);
+                self.set_register(dest, result);
             }
+
             Instruction::J(_) => return Err(Error::InstructionNotImplemented("j".into())),
+
             Instruction::Jal(_) => return Err(Error::InstructionNotImplemented("jal".into())),
+
             Instruction::Jalr(_, _, _, _) => {
                 return Err(Error::InstructionNotImplemented("jalr".into()))
             }
+
             Instruction::Jr(_, _, _, _) => {
                 return Err(Error::InstructionNotImplemented("jr".into()))
             }
+
             Instruction::Lb(_, _, _) => return Err(Error::InstructionNotImplemented("lb".into())),
+
             Instruction::Lbu(_, _, _) => {
                 return Err(Error::InstructionNotImplemented("lbu".into()))
             }
+
             Instruction::Lhu(_, _, _) => {
                 return Err(Error::InstructionNotImplemented("lhu".into()))
             }
+
             Instruction::Lui(_, _, _) => {
                 return Err(Error::InstructionNotImplemented("lui".into()))
             }
             Instruction::Lw(_, _, _) => return Err(Error::InstructionNotImplemented("lw".into())),
+
             Instruction::Mfhi(_, _, _, _) => {
                 return Err(Error::InstructionNotImplemented("mfhi".into()))
             }
+
             Instruction::Mthi(_, _, _, _) => {
                 return Err(Error::InstructionNotImplemented("mthi".into()))
             }
+
             Instruction::Mflo(_, _, _, _) => {
                 return Err(Error::InstructionNotImplemented("mflo".into()))
             }
+
             Instruction::Mtlo(_, _, _, _) => {
                 return Err(Error::InstructionNotImplemented("mtlo".into()))
             }
+
             Instruction::Mfc0(_, _, _, _) => {
                 return Err(Error::InstructionNotImplemented("mfc0".into()))
             }
+
             Instruction::Mult(_, _, _, _) => {
                 return Err(Error::InstructionNotImplemented("mult".into()))
             }
+
             Instruction::Multu(_, _, _, _) => {
                 return Err(Error::InstructionNotImplemented("multu".into()))
             }
+
             Instruction::Nor(_, _, _, _) => {
                 return Err(Error::InstructionNotImplemented("nor".into()))
             }
+
             Instruction::Xor(_, _, _, _) => {
                 return Err(Error::InstructionNotImplemented("xor".into()))
             }
+
             Instruction::Or(_, _, _, _) => {
                 return Err(Error::InstructionNotImplemented("or".into()))
             }
+
             Instruction::Ori(_, _, _) => {
                 return Err(Error::InstructionNotImplemented("ori".into()))
             }
+
             Instruction::Sb(_, _, _) => return Err(Error::InstructionNotImplemented("sb".into())),
+
             Instruction::Sh(_, _, _) => return Err(Error::InstructionNotImplemented("sh".into())),
+
             Instruction::Slt(_, _, _, _) => {
                 return Err(Error::InstructionNotImplemented("slt".into()))
             }
+
             Instruction::Slti(_, _, _) => {
                 return Err(Error::InstructionNotImplemented("slti".into()))
             }
+
             Instruction::Sltiu(_, _, _) => {
                 return Err(Error::InstructionNotImplemented("sltiu".into()))
             }
+
             Instruction::Sltu(_, _, _, _) => {
                 return Err(Error::InstructionNotImplemented("sltu".into()))
             }
+
             Instruction::Sll(_, _, _, _) => {
                 return Err(Error::InstructionNotImplemented("sll".into()))
             }
+
             Instruction::Srl(_, _, _, _) => {
                 return Err(Error::InstructionNotImplemented("srl".into()))
             }
+
             Instruction::Sra(_, _, _, _) => {
                 return Err(Error::InstructionNotImplemented("sra".into()))
             }
+
             Instruction::Sub(_, _, _, _) => {
                 return Err(Error::InstructionNotImplemented("sub".into()))
             }
+
             Instruction::Subu(_, _, _, _) => {
                 return Err(Error::InstructionNotImplemented("subu".into()))
             }
+
             Instruction::Sw(_, _, _) => return Err(Error::InstructionNotImplemented("sw".into())),
         }
         self.pc += 4;

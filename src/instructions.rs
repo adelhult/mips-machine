@@ -280,15 +280,15 @@ fn from_r_format(value: u32) -> Result<Instruction, Error> {
     let opcode = (value >> 26) & MASK6;
 
     let destination_r = ((value >> 11) & MASK5).try_into()?;
-    let target_r = ((value >> 16) & MASK5).try_into()?;
-    let source_r = ((value >> 21) & MASK5).try_into()?;
+    let source1_r = ((value >> 16) & MASK5).try_into()?;
+    let source0_r = ((value >> 21) & MASK5).try_into()?;
 
     // mfc0 is the only R format instruction with a opcode that is not 0x00
     if opcode == 0x10 {
         return Ok(Instruction::Mfc0(
             destination_r,
-            source_r,
-            target_r,
+            source0_r,
+            source1_r,
             shift as u8,
         ));
     }
@@ -326,7 +326,7 @@ fn from_r_format(value: u32) -> Result<Instruction, Error> {
     // return an error
     instruction.map_or_else(
         || Err(Error::InvalidInstruction(value)),
-        |i| Ok(i(destination_r, source_r, target_r, shift as u8)),
+        |i| Ok(i(destination_r, source0_r, source1_r, shift as u8)),
     )
 }
 
@@ -334,8 +334,8 @@ fn from_r_format(value: u32) -> Result<Instruction, Error> {
 /// `opcode 6 | rs 5 | rt 5 | IMM 16`. Where IMM is the 16 bit immediate value.
 fn from_i_format(value: u32) -> Result<Instruction, Error> {
     let opcode = value >> 26;
-    let source_r = ((value >> 21) & MASK5).try_into()?;
-    let target_r = ((value >> 16) & MASK5).try_into()?;
+    let source0_r = ((value >> 21) & MASK5).try_into()?;
+    let source1_r = ((value >> 16) & MASK5).try_into()?;
     let immediate = value & 0xFF;
 
     let instruction: Option<fn(Register, Register, u16) -> Instruction> = match opcode {
@@ -362,6 +362,6 @@ fn from_i_format(value: u32) -> Result<Instruction, Error> {
 
     instruction.map_or_else(
         || Err(Error::InvalidInstruction(value)),
-        |i| Ok(i(source_r, target_r, immediate as u16)),
+        |i| Ok(i(source0_r, source1_r, immediate as u16)),
     )
 }
