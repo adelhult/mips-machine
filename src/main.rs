@@ -25,9 +25,12 @@ struct Args {
 fn get_memory(file: String) -> Option<Vec<u8>> {
     let mut memory = Vec::new();
     for line in fs::read_to_string(&file).ok()?.lines() {
-        // every line should contain a byte in binary form
-        let byte = u8::from_str_radix(line, 2).ok()?;
-        memory.push(byte);
+        // every line should contain a word written in hex format
+        let word = u32::from_str_radix(line, 16).ok()?;
+        memory.push((word >> 24) as u8);
+        memory.push(((word >> 16) & 0xFF) as u8);
+        memory.push(((word >> 8) & 0xFF) as u8);
+        memory.push((word & 0xFF) as u8);
     }
     Some(memory)
 }
@@ -70,8 +73,12 @@ fn step(machine: &mut Machine) {
             let msg = report_error(error);
             red_ln!("Error: {}.", msg);
         }
-        Ok(instruction) => println!("Executed {:?}\nIncremented pc to: {}", instruction, machine.read_pc()),
-    }   
+        Ok(instruction) => println!(
+            "Executed {:?}\nIncremented pc to: {}",
+            instruction,
+            machine.read_pc()
+        ),
+    }
 }
 
 fn help() {

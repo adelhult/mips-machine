@@ -1,2 +1,3 @@
 /target
 Cargo.lock
+memory_test.mem

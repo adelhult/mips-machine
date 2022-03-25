@@ -2,67 +2,67 @@ use crate::error::Error;
 
 /// All of  the general purpose registers that
 /// are allowed to be used.
-/// 
+///
 /// Reference: <https://en.wikibooks.org/wiki/MIPS_Assembly/Register_File>
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Register {
-    /// `$zero` is always set to zero. 
+    /// `$zero` is always set to zero.
     Zero = 0,
-    
+
     /// Assembler Temporary, may not be used.
     // At = 1,
 
-    /// `$v0` is used for returning values from functions. 
-    /// Not preserved across function calls. 
+    /// `$v0` is used for returning values from functions.
+    /// Not preserved across function calls.
     V0 = 2,
     /// `$v1` is used for returning values from functions.
-    /// Not preserved across function calls. 
+    /// Not preserved across function calls.
     V1 = 3,
 
     /// `$a0` is used for passing arguments to functions.
-    /// Not preserved across function calls. 
+    /// Not preserved across function calls.
     A0 = 4,
     /// `$a1` is used for passing arguments to functions.
-    /// Not preserved across function calls. 
+    /// Not preserved across function calls.
     A1 = 5,
     /// `$a2` is used for passing arguments to functions.
-    /// Not preserved across function calls. 
+    /// Not preserved across function calls.
     A2 = 6,
     /// `$a3` is used for passing arguments to functions.
-    /// Not preserved across function calls. 
+    /// Not preserved across function calls.
     A3 = 7,
 
     /// `$t0` is a temporary register.
-    /// Not preserved across function calls. 
+    /// Not preserved across function calls.
     T0 = 8,
     /// `$t1` is a temporary register.
-    /// Not preserved across function calls. 
+    /// Not preserved across function calls.
     T1 = 9,
     /// `$t2` is a temporary register.
-    /// Not preserved across function calls. 
+    /// Not preserved across function calls.
     T2 = 10,
     /// `$t3` is a temporary register.
-    /// Not preserved across function calls. 
+    /// Not preserved across function calls.
     T3 = 11,
     /// `$t4` is a temporary register.
-    /// Not preserved across function calls. 
+    /// Not preserved across function calls.
     T4 = 12,
     /// `$t5` is a temporary register.
-    /// Not preserved across function calls. 
+    /// Not preserved across function calls.
     T5 = 13,
     /// `$t6` is a temporary register.
-    /// Not preserved across function calls. 
+    /// Not preserved across function calls.
     T6 = 14,
     /// `$t7` is a temporary register.
-    /// Not preserved across function calls. 
+    /// Not preserved across function calls.
     T7 = 15,
     /// `$t8` is a temporary register.
-    /// Not preserved across function calls. 
+    /// Not preserved across function calls.
     T8 = 24,
     /// `$t9` is a temporary register.
-    /// Not preserved across function calls. 
+    /// Not preserved across function calls.
     T9 = 25,
-    
+
     /// `$s0` is a **saved** temporary register.
     /// Preserved across function calls.  
     S0 = 16,
@@ -70,22 +70,22 @@ pub enum Register {
     /// Preserved across function calls.  
     S1 = 17,
     /// `$s2` is a **saved** temporary register.
-    /// Preserved across function calls. 
+    /// Preserved across function calls.
     S2 = 18,
     /// `$s3` is a **saved** temporary register.
-    /// Preserved across function calls. 
+    /// Preserved across function calls.
     S3 = 19,
     /// `$s4` is a **saved** temporary register.
-    /// Preserved across function calls. 
+    /// Preserved across function calls.
     S4 = 20,
     /// `$s5` is a **saved** temporary register.
-    /// Preserved across function calls. 
+    /// Preserved across function calls.
     S5 = 21,
     /// `$s6` is a **saved** temporary register.
-    /// Preserved across function calls. 
+    /// Preserved across function calls.
     S6 = 22,
     /// `$s7` is a **saved** temporary register.
-    /// Preserved across function calls. 
+    /// Preserved across function calls.
     S7 = 23,
 
     /// `$k0` is reserved for use by the OS kernel.
@@ -93,16 +93,16 @@ pub enum Register {
     /// `$k1` is reserved for use by the OS kernel.
     K1 = 27,
 
-    /// `$gp` is the so called "global pointer". A pointer to the global data area. 
+    /// `$gp` is the so called "global pointer". A pointer to the global data area.
     Gp = 28,
 
     /// `$sp`. Stack pointer.
-    Sp = 29, 
+    Sp = 29,
 
     /// `$sp`. Frame pointer.
     Fp = 30,
 
-    /// Return address 
+    /// Return address
     Ra = 31,
 }
 
@@ -112,15 +112,15 @@ impl TryFrom<u32> for Register {
     fn try_from(value: u32) -> Result<Self, Self::Error> {
         use Register::*;
         match value {
-            0  => Ok(Zero),
-            2  => Ok(V0),
-            3  => Ok(V1),
-            4  => Ok(A0),
-            5  => Ok(A1),
-            6  => Ok(A2),
-            7  => Ok(A3),
-            8  => Ok(T0),
-            9  => Ok(T1),
+            0 => Ok(Zero),
+            2 => Ok(V0),
+            3 => Ok(V1),
+            4 => Ok(A0),
+            5 => Ok(A1),
+            6 => Ok(A2),
+            7 => Ok(A3),
+            8 => Ok(T0),
+            9 => Ok(T1),
             10 => Ok(T2),
             11 => Ok(T3),
             12 => Ok(T4),
@@ -143,7 +143,7 @@ impl TryFrom<u32> for Register {
             29 => Ok(Sp),
             30 => Ok(Fp),
             31 => Ok(Ra),
-            n => Err(Error::InvalidRegisterNumber(n))
+            n => Err(Error::InvalidRegisterNumber(n)),
         }
     }
 }
@@ -207,7 +207,7 @@ pub enum Instruction {
     Mfc0(Register, Register, Register, u8),
     /// Multiply
     Mult(Register, Register, Register, u8),
-    /// Unsigned Multiply 
+    /// Unsigned Multiply
     Multu(Register, Register, Register, u8),
     /// Bitwise NOR
     Nor(Register, Register, Register, u8),
@@ -243,7 +243,6 @@ pub enum Instruction {
     Sw(Register, Register, u16),
 }
 
-
 impl TryFrom<u32> for Instruction {
     type Error = Error;
 
@@ -251,9 +250,9 @@ impl TryFrom<u32> for Instruction {
         let opcode = value >> 26;
         match opcode {
             0x00 | 0x10 => from_r_format(value),
-            0x02 => from_j_format(value),// Instruction::J(...),
-            0x03 => from_j_format(value),// Instruction::Jal(...),
-            _ => from_i_format(value), 
+            0x02 => from_j_format(value), // Instruction::J(...),
+            0x03 => from_j_format(value), // Instruction::Jal(...),
+            _ => from_i_format(value),
         }
     }
 }
@@ -276,21 +275,24 @@ fn from_j_format(value: u32) -> Result<Instruction, Error> {
 /// Convert a raw u32 to a Instruction written in the R format:
 /// `opcode 6 | rs 5 | rt 5 | rd 5 | shift 5 | funct 6`
 fn from_r_format(value: u32) -> Result<Instruction, Error> {
-
-    let funct         = value         & MASK6;
-    let shift         = (value >> 6)  & MASK5; 
-    let opcode        = (value >> 26) & MASK6;
+    let funct = value & MASK6;
+    let shift = (value >> 6) & MASK5;
+    let opcode = (value >> 26) & MASK6;
 
     let destination_r = ((value >> 11) & MASK5).try_into()?;
-    let target_r      = ((value >> 16) & MASK5).try_into()?;
-    let source_r      = ((value >> 21) & MASK5).try_into()?;
-
+    let target_r = ((value >> 16) & MASK5).try_into()?;
+    let source_r = ((value >> 21) & MASK5).try_into()?;
 
     // mfc0 is the only R format instruction with a opcode that is not 0x00
     if opcode == 0x10 {
-        return Ok(Instruction::Mfc0(destination_r, source_r, target_r, shift as u8));
+        return Ok(Instruction::Mfc0(
+            destination_r,
+            source_r,
+            target_r,
+            shift as u8,
+        ));
     }
-    
+
     // Find the correct instruction based on the funct
     type InstrConstructor = Option<fn(Register, Register, Register, u8) -> Instruction>;
     let instruction: InstrConstructor = match funct {
@@ -317,23 +319,23 @@ fn from_r_format(value: u32) -> Result<Instruction, Error> {
         0x03 => Some(Instruction::Sra),
         0x22 => Some(Instruction::Sub),
         0x23 => Some(Instruction::Subu),
-        _    => None,
+        _ => None,
     };
 
     // Attach the three registers to the instruction constructor or
     // return an error
     instruction.map_or_else(
-        | | Err(Error::InvalidInstruction(value)), 
-        |i| Ok(i(destination_r, source_r, target_r, shift as u8))
+        || Err(Error::InvalidInstruction(value)),
+        |i| Ok(i(destination_r, source_r, target_r, shift as u8)),
     )
 }
 
 /// Convert a raw u32 to a Instruction written in the I format:
-/// `opcode 6 | rs 5 | rt 5 | IMM 16`. Where IMM is the 16 bit immediate value. 
+/// `opcode 6 | rs 5 | rt 5 | IMM 16`. Where IMM is the 16 bit immediate value.
 fn from_i_format(value: u32) -> Result<Instruction, Error> {
-    let opcode    = value >> 26;
-    let source_r  = ((value >> 21) & MASK5).try_into()?;
-    let target_r  = ((value >> 16) & MASK5).try_into()?;
+    let opcode = value >> 26;
+    let source_r = ((value >> 21) & MASK5).try_into()?;
+    let target_r = ((value >> 16) & MASK5).try_into()?;
     let immediate = value & 0xFF;
 
     let instruction: Option<fn(Register, Register, u16) -> Instruction> = match opcode {
@@ -343,6 +345,7 @@ fn from_i_format(value: u32) -> Result<Instruction, Error> {
         0x06 => Some(Instruction::Blez),
         0x05 => Some(Instruction::Bne),
         0x07 => Some(Instruction::Bgtz),
+        0x09 => Some(Instruction::Addiu),
         0x20 => Some(Instruction::Lb),
         0x24 => Some(Instruction::Lbu),
         0x25 => Some(Instruction::Lhu),
@@ -354,11 +357,11 @@ fn from_i_format(value: u32) -> Result<Instruction, Error> {
         0x0A => Some(Instruction::Slti),
         0x0B => Some(Instruction::Sltiu),
         0x2B => Some(Instruction::Sw),
-        _    => None,
+        _ => None,
     };
 
     instruction.map_or_else(
-        | | Err(Error::InvalidInstruction(value)), 
-        |i| Ok(i(source_r, target_r, immediate as u16))
+        || Err(Error::InvalidInstruction(value)),
+        |i| Ok(i(source_r, target_r, immediate as u16)),
     )
 }
