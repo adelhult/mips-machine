@@ -61,23 +61,28 @@ impl Machine {
     /// Read a word starting at the given address
     pub fn read_word(&self, address: usize) -> u32 {
         ((self.memory[address] as u32) << 24)
-            + ((self.memory[address + 1] as u32) << 16)
-            + ((self.memory[address + 2] as u32) << 8)
-            + (self.memory[address + 3] as u32)
+            | ((self.memory[address + 1] as u32) << 16)
+            | ((self.memory[address + 2] as u32) << 8)
+            | (self.memory[address + 3] as u32)
     }
 
-    /// Write a word starting at the given address
+    /// Write a word starting at the given word-aligned address
     pub fn write_word(&mut self, address: usize, word : u32) {
-        self.memory[address]     = (word >> 24) as u8;
-        self.memory[address + 1] = (word >> 16) as u8;
-        self.memory[address + 2] = (word >> 8) as u8;
-        self.memory[address + 3] = word as u8;
+        self.memory[address]     = word as u8;
+        self.memory[address + 1] = (word >> 8) as u8;
+        self.memory[address + 2] = (word >> 16) as u8;
+        self.memory[address + 3] = (word >> 24) as u8;
     }
 
-    /// Write a halfword to the least significant 16 bits starting at the given word aligned address
+    /// Write a halfword starting at the given halfword-aligned address
     pub fn write_halfword(&mut self, address: usize, halfword : u16) {
-        self.memory[address + 2] = (halfword >> 8) as u8;
-        self.memory[address + 3] = halfword as u8;
+        self.memory[address] = halfword as u8;
+        self.memory[address + 1] = (halfword >> 8) as u8;
+    }
+
+    /// Write a byte starting at the given address
+    pub fn write_byte(&mut self, address: usize, byte : u8) {
+        self.memory[address] = byte;
     }
 
     /// A helper function to perform a operation on two registers and
@@ -98,8 +103,9 @@ impl Machine {
                 self.set_register(dest, sum);
             }
 
-            Instruction::Addi(_, _, _) => {
-                return Err(Error::InstructionNotImplemented("addi".into()))
+            Instruction::Addi(rs, rt, immediate) => {
+                let sum = self.read_register(rs) + ((immediate as i32) as u32);
+                self.set_register(rt, sum);
             }
 
             Instruction::Addiu(_, _, _) => {
@@ -224,8 +230,8 @@ impl Machine {
                 self.write_halfword(dest_adr as usize, self.read_register(rt) as u16);
             }
 
-            Instruction::Slt(_, _, _, _) => {
-                return Err(Error::InstructionNotImplemented("slt".into()))
+            Instruction::Slt(rd, rt, rs, _) => {
+                self.set_register(rd, if (self.read_register(rs) as i32) < (self.read_register(rt) as i32) { 1 } else { 0 });
             }
 
             Instruction::Slti(_, _, _) => {
@@ -295,9 +301,33 @@ mod tests {
 
     #[test]
     fn write_word() {
-        const bruh : u32 = 0xFAFAFAFA;
+        const BRUH : u32 = 0xFAFAFAFA;
         let mut machine = Machine::new();
-        machine.write_word(0, bruh);
-        assert_eq!(machine.read_word(0), bruh);
+        machine.write_word(0, BRUH);
+        assert_eq!(machine.read_word(0), BRUH);
+    }
+
+    #[test]
+    fn write_halfword() {
+        let mut machine = Machine::new();
+        //let x: [u32; 7] = [0x3c011001,0x34210000,0x00011020,0x20010005,0xa4410000, 0x20010006, 0xa4410002];
+        let x: &[u32] = &[0x20020100, 0x20030005, 0xa4430000, 0x20030006, 0xa4430002];
+        let v = x.iter()
+            .copied()
+            .map(|word| word.to_be_bytes().into_iter())
+            .flatten()
+            .collect::<Vec<u8>>();
+        machine.set_memory_from(&v, 0);
+        for _ in 1..=x.len() {
+            let res = machine.step().unwrap();
+            dbg!(res);
+            dbg!(machine.read_pc());
+        }
+        dbg!(machine.read_register(Register::Zero));
+        dbg!(machine.read_register(Register::V0));
+        dbg!(machine.read_register(Register::V1));
+        dbg!(machine.read_register(Register::A0));
+        dbg!(machine.read_register(Register::A1));
+        assert_eq!(machine.read_word(0x0100), 0x00060005_u32.to_be());
     }
 }
