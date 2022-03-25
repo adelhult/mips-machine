@@ -74,6 +74,12 @@ impl Machine {
         self.memory[address + 3] = word as u8;
     }
 
+    /// Write a halfword to the least significant 16 bits starting at the given word aligned address
+    pub fn write_halfword(&mut self, address: usize, halfword : u16) {
+        self.memory[address + 2] = (halfword >> 8) as u8;
+        self.memory[address + 3] = halfword as u8;
+    }
+
     /// A helper function to perform a operation on two registers and
     /// return the resulting 32 bit integer
     fn op(&self, a: Register, b: Register, op: fn(u32, u32) -> u32) -> u32 {
@@ -215,8 +221,7 @@ impl Machine {
             }
             Instruction::Sh(base, rt, offset) => {
                 let dest_adr = self.read_register(base) + (offset as i16) as u32;
-                self.write_word(dest_adr as usize, self.read_register(rt) & 0xFFFF);
-                return Err(Error::InstructionNotImplemented("sh".into()))
+                self.write_halfword(dest_adr as usize, self.read_register(rt) as u16);
             }
 
             Instruction::Slt(_, _, _, _) => {
@@ -287,7 +292,7 @@ mod tests {
         let machine = Machine::new();
         assert_eq!(machine.read_word(0), 0);
     }
-    
+
     #[test]
     fn write_word() {
         const bruh : u32 = 0xFAFAFAFA;
