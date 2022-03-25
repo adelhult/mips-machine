@@ -10,3 +10,6 @@ author = "Eli Adelhult"
 clap = { version = "3.1.6", features = ["derive"] }
 colour = "0.6.0"
 read_input = "0.8.6"
+
+[profile.dev]
+overflow-checks = false
