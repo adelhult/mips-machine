@@ -66,6 +66,14 @@ impl Machine {
             + (self.memory[address + 3] as u32)
     }
 
+    /// Write a word starting at the given address
+    pub fn write_word(&mut self, address: usize, word : u32) {
+        self.memory[address]     = (word >> 24) as u8;
+        self.memory[address + 1] = (word >> 16) as u8;
+        self.memory[address + 2] = (word >> 8) as u8;
+        self.memory[address + 3] = word as u8;
+    }
+
     /// A helper function to perform a operation on two registers and
     /// return the resulting 32 bit integer
     fn op(&self, a: Register, b: Register, op: fn(u32, u32) -> u32) -> u32 {
@@ -201,10 +209,15 @@ impl Machine {
             Instruction::Ori(_, _, _) => {
                 return Err(Error::InstructionNotImplemented("ori".into()))
             }
-
-            Instruction::Sb(_, _, _) => return Err(Error::InstructionNotImplemented("sb".into())),
-
-            Instruction::Sh(_, _, _) => return Err(Error::InstructionNotImplemented("sh".into())),
+            Instruction::Sb(base, rt, offset) => {
+                let dest_adr = self.read_register(base) + (offset as i16) as u32; // TODO: use wrapping u32
+                self.write_word(dest_adr as usize, self.read_register(rt));
+            }
+            Instruction::Sh(base, rt, offset) => {
+                let dest_adr = self.read_register(base) + (offset as i16) as u32;
+                self.write_word(dest_adr as usize, self.read_register(rt) & 0xFFFF);
+                return Err(Error::InstructionNotImplemented("sh".into()))
+            }
 
             Instruction::Slt(_, _, _, _) => {
                 return Err(Error::InstructionNotImplemented("slt".into()))
@@ -273,5 +286,13 @@ mod tests {
     fn new_machine() {
         let machine = Machine::new();
         assert_eq!(machine.read_word(0), 0);
+    }
+    
+    #[test]
+    fn write_word() {
+        const bruh : u32 = 0xFAFAFAFA;
+        let mut machine = Machine::new();
+        machine.write_word(0, bruh);
+        assert_eq!(machine.read_word(0), bruh);
     }
 }
