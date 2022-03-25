@@ -156,23 +156,23 @@ pub enum Instruction {
     /// Add
     Add(Register, Register, Register, u8),
     /// Add Immediate
-    Addi(Register, Register, u16),
+    Addi(Register, Register, i16),
     /// Add Unsigned Immediate
-    Addiu(Register, Register, u16),
+    Addiu(Register, Register, i16),
     /// Add Unsigned
     Addu(Register, Register, Register, u8),
     /// Bitwise AND
     And(Register, Register, Register, u8),
     /// Bitwise AND Immediate
-    Andi(Register, Register, u16),
+    Andi(Register, Register, i16),
     /// Branch if Equal
-    Beq(Register, Register, u16),
+    Beq(Register, Register, i16),
     /// Branch if Less Than or Equal to Zero
-    Blez(Register, Register, u16),
+    Blez(Register, Register, i16),
     /// Branch if Not Equal
-    Bne(Register, Register, u16),
+    Bne(Register, Register, i16),
     /// Branch on Greater Than Zero
-    Bgtz(Register, Register, u16),
+    Bgtz(Register, Register, i16),
     /// Divide
     Div(Register, Register, Register, u8),
     /// Unsigned Divide
@@ -186,15 +186,15 @@ pub enum Instruction {
     /// Jump to Address in Register
     Jr(Register, Register, Register, u8),
     /// Load Byte
-    Lb(Register, Register, u16),
+    Lb(Register, Register, i16),
     /// Load Byte Unsigned
-    Lbu(Register, Register, u16),
+    Lbu(Register, Register, i16),
     /// Load Halfword Unsigned
-    Lhu(Register, Register, u16),
+    Lhu(Register, Register, i16),
     /// Load Upper Immediate
-    Lui(Register, Register, u16),
+    Lui(Register, Register, i16),
     /// Load Word
-    Lw(Register, Register, u16),
+    Lw(Register, Register, i16),
     /// Move from HI Register
     Mfhi(Register, Register, Register, u8),
     /// Move to HI Register
@@ -216,17 +216,17 @@ pub enum Instruction {
     /// Bitwise OR
     Or(Register, Register, Register, u8),
     /// Bitwise OR Immediate
-    Ori(Register, Register, u16),
+    Ori(Register, Register, i16),
     /// Store Byte
-    Sb(Register, Register, u16),
+    Sb(Register, Register, i16),
     /// Store Halfword
-    Sh(Register, Register, u16),
+    Sh(Register, Register, i16),
     /// Set to 1 if Less Than
     Slt(Register, Register, Register, u8),
     /// Set to 1 if Less Than Immediate
-    Slti(Register, Register, u16),
+    Slti(Register, Register, i16),
     /// Set to 1 if Less Than Unsigned Immediate
-    Sltiu(Register, Register, u16),
+    Sltiu(Register, Register, i16),
     /// Set to 1 if Less Than Unsigned
     Sltu(Register, Register, Register, u8),
     /// Logical Shift Left
@@ -240,7 +240,7 @@ pub enum Instruction {
     /// Unsigned Subtract
     Subu(Register, Register, Register, u8),
     /// Store Word
-    Sw(Register, Register, u16),
+    Sw(Register, Register, i16),
 }
 
 impl TryFrom<u32> for Instruction {
@@ -336,9 +336,9 @@ fn from_i_format(value: u32) -> Result<Instruction, Error> {
     let opcode = value >> 26;
     let source0_r = ((value >> 21) & MASK5).try_into()?;
     let source1_r = ((value >> 16) & MASK5).try_into()?;
-    let immediate = value & 0xFF;
+    let immediate = (value & 0xFF) as i16;
 
-    let instruction: Option<fn(Register, Register, u16) -> Instruction> = match opcode {
+    let instruction: Option<fn(Register, Register, i16) -> Instruction> = match opcode {
         0x08 => Some(Instruction::Addi),
         0x0C => Some(Instruction::Andi),
         0x04 => Some(Instruction::Beq),
@@ -362,6 +362,6 @@ fn from_i_format(value: u32) -> Result<Instruction, Error> {
 
     instruction.map_or_else(
         || Err(Error::InvalidInstruction(value)),
-        |i| Ok(i(source0_r, source1_r, immediate as u16)),
+        |i| Ok(i(source0_r, source1_r, immediate)),
     )
 }
