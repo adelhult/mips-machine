@@ -66,31 +66,30 @@ impl Machine {
 
     /// Read a word starting at the given address
     pub fn read_halfword(&self, address: usize) -> u16 {
-        ((self.memory[address] as u16) << 8)
-            | (self.memory[address + 1] as u16)
+        ((self.memory[address] as u16) << 8) | (self.memory[address + 1] as u16)
     }
 
     /// Read a byte starting at the given address
     pub fn read_byte(&self, address: usize) -> u8 {
-            return self.memory[address]
+        self.memory[address]
     }
 
     /// Write a word starting at the given word-aligned address
-    pub fn write_word(&mut self, address: usize, word : u32) {
-        self.memory[address]     = word as u8;
+    pub fn write_word(&mut self, address: usize, word: u32) {
+        self.memory[address] = word as u8;
         self.memory[address + 1] = (word >> 8) as u8;
         self.memory[address + 2] = (word >> 16) as u8;
         self.memory[address + 3] = (word >> 24) as u8;
     }
 
     /// Write a halfword starting at the given halfword-aligned address
-    pub fn write_halfword(&mut self, address: usize, halfword : u16) {
+    pub fn write_halfword(&mut self, address: usize, halfword: u16) {
         self.memory[address] = halfword as u8;
         self.memory[address + 1] = (halfword >> 8) as u8;
     }
 
     /// Write a byte starting at the given address
-    pub fn write_byte(&mut self, address: usize, byte : u8) {
+    pub fn write_byte(&mut self, address: usize, byte: u8) {
         self.memory[address] = byte;
     }
 
@@ -110,14 +109,14 @@ impl Machine {
         self.pc += 4;
         match instruction {
             // TODO: If the addition results in 32-bit 2’s complement arithmetic overflow,
-            // the destination register is not modified and an Integer Overflow exception occurs. 
+            // the destination register is not modified and an Integer Overflow exception occurs.
             Instruction::Add(dest, source0, source1, _) => {
                 let sum = self.op(source0, source1, |a, b| (a as i32 + b as i32) as u32);
                 self.set_register(dest, sum);
             }
 
             // TODO: If the addition results in 32-bit 2’s complement arithmetic overflow,
-            // the destination register is not modified and an Integer Overflow exception occurs. 
+            // the destination register is not modified and an Integer Overflow exception occurs.
             Instruction::Addi(rs, rt, immediate) => {
                 let sum = (self.read_register(rs) as i32 + immediate as i32) as u32;
                 self.set_register(rt, sum);
@@ -285,13 +284,13 @@ impl Machine {
             }
 
             // TODO: No arithmetic exceptions occur. Division by zero produces an UNPREDICTABLE result.
-            Instruction::Mod(rd , rs, rt, _) => {
+            Instruction::Mod(rd, rs, rt, _) => {
                 let result = self.op(rs, rt, |a, b| (a as i32).rem_euclid(b as i32) as u32);
                 self.set_register(rd, result);
             }
 
             // TODO: No arithmetic exceptions occur. Division by zero produces an UNPREDICTABLE result.
-            Instruction::Modu(rd , rs, rt, _) => {
+            Instruction::Modu(rd, rs, rt, _) => {
                 let result = self.op(rs, rt, |a, b| a % b);
                 self.set_register(rd, result);
             }
@@ -334,11 +333,17 @@ impl Machine {
             }
 
             Instruction::Slt(rd, rs, rt, _) => {
-                self.set_register(rd, ((self.read_register(rs) as i32) < (self.read_register(rt) as i32)) as u32);
+                self.set_register(
+                    rd,
+                    ((self.read_register(rs) as i32) < (self.read_register(rt) as i32)) as u32,
+                );
             }
 
             Instruction::Slti(rs, rt, immediate) => {
-                self.set_register(rt, ((self.read_register(rs) as i32) < (immediate as i32)) as u32);
+                self.set_register(
+                    rt,
+                    ((self.read_register(rs) as i32) < (immediate as i32)) as u32,
+                );
             }
 
             Instruction::Sltiu(rs, rt, immediate) => {
@@ -359,7 +364,7 @@ impl Machine {
 
             Instruction::Sra(rd, _, rt, sa) => {
                 // The language will give you either LSR or ASR, depending on what type integer you give it
-                self.set_register(rd, (self.read_register(rt) as i32 >> sa) as u32); 
+                self.set_register(rd, (self.read_register(rt) as i32 >> sa) as u32);
             }
 
             // TODO: If the subtraction results in 32-bit 2’s complement arithmetic overflow,
