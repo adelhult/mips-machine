@@ -110,9 +110,9 @@ impl Machine {
         match instruction {
             // TODO: If the addition results in 32-bit 2’s complement arithmetic overflow,
             // the destination register is not modified and an Integer Overflow exception occurs.
-            Instruction::Add(dest, source0, source1, _) => {
-                let sum = self.op(source0, source1, |a, b| (a as i32 + b as i32) as u32);
-                self.set_register(dest, sum);
+            Instruction::Add(rs, rt, rd, _) => {
+                let sum = self.op(rs, rt, |a, b| (a as i32 + b as i32) as u32);
+                self.set_register(rd, sum);
             }
 
             // TODO: If the addition results in 32-bit 2’s complement arithmetic overflow,
@@ -127,17 +127,17 @@ impl Machine {
                 self.set_register(rt, sum);
             }
 
-            Instruction::Addu(dest, source0, source1, _) => {
-                let sum = self.op(source0, source1, |a, b| a + b);
-                self.set_register(dest, sum);
+            Instruction::Addu(rs, rt, rd, _) => {
+                let sum = self.op(rs, rt, |a, b| a + b);
+                self.set_register(rd, sum);
             }
 
-            Instruction::And(dest, source0, source1, _) => {
-                self.set_register(dest, self.op(source0, source1, |a, b| a & b));
+            Instruction::And(rs, rt, rd, _) => {
+                self.set_register(rd, self.op(rs, rt, |a, b| a & b));
             }
 
-            Instruction::Andi(dest, source0, constant) => {
-                self.set_register(dest, self.read_register(source0) & constant as u32);
+            Instruction::Andi(rs, rt, immediate) => {
+                self.set_register(rt, self.read_register(rs) & immediate as u32);
             }
 
             // TODO: Control Transfer Instructions (CTIs) should not be placed in branch delay slots

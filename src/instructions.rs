@@ -3,14 +3,14 @@ use crate::error::Error;
 /// All of  the general purpose registers that
 /// are allowed to be used.
 ///
-/// Reference: <https://en.wikibooks.org/wiki/MIPS_Assembly/Register_File>
+/// Reference: <https://s3-eu-west-1.amazonaws.com/downloads-mips/documents/MD00086-2B-MIPS32BIS-AFP-6.06.pdf>
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Register {
     /// `$zero` is always set to zero.
     Zero = 0,
 
     /// Assembler Temporary, may not be used.
-    // At = 1,
+    At = 1,
 
     /// `$v0` is used for returning values from functions.
     /// Not preserved across function calls.
@@ -148,105 +148,112 @@ impl TryFrom<u32> for Register {
     }
 }
 
-/// All of the machine instructions
+type Rs = Register;
+type Rt = Register;
+type Rd = Register;
+/// **Note:** Only 5 bits are allowed to be used
+type Shift = u8;
+type Immediate = i16;
+
+/// Machine instructions (a subset of MIPS32).
 ///
-/// Reference: <https://en.wikibooks.org/wiki/MIPS_Assembly/Instruction_Formats>
+/// Reference: <https://s3-eu-west-1.amazonaws.com/downloads-mips/documents/MD00086-2B-MIPS32BIS-AFP-6.06.pdf>
 #[derive(Debug, PartialEq)]
 pub enum Instruction {
     /// Add
-    Add(Register, Register, Register, u8),
+    Add(Rs, Rt, Rd, Shift),
     /// Add Immediate
-    Addi(Register, Register, i16),
+    Addi(Rs, Rt, Immediate),
     /// Add Unsigned Immediate
-    Addiu(Register, Register, i16),
+    Addiu(Rs, Rt, Immediate),
     /// Add Unsigned
-    Addu(Register, Register, Register, u8),
+    Addu(Rs, Rt, Rd, Shift),
     /// Bitwise AND
-    And(Register, Register, Register, u8),
+    And(Rs, Rt, Rd, Shift),
     /// Bitwise AND Immediate
-    Andi(Register, Register, i16),
+    Andi(Rs, Rt, Immediate),
     /// Branch if Equal
-    Beq(Register, Register, i16),
+    Beq(Rs, Rt, Immediate),
     /// Branch if Less Than or Equal to Zero
-    Blez(Register, Register, i16),
+    Blez(Rs, Rt, Immediate),
     /// Branch if Not Equal
-    Bne(Register, Register, i16),
+    Bne(Rs, Rt, Immediate),
     /// Branch on Greater Than Zero
-    Bgtz(Register, Register, i16),
+    Bgtz(Rs, Rt, Immediate),
     /// Divide
-    DivOLD(Register, Register, Register, u8),
-    Div(Register, Register, Register, u8),
+    DivOLD(Rs, Rt, Rd, Shift),
+    Div(Rs, Rt, Rd, Shift),
     /// Mod
-    Mod(Register, Register, Register, u8),
+    Mod(Rs, Rt, Rd, Shift),
     /// Unsigned Divide
-    DivuOLD(Register, Register, Register, u8),
-    Divu(Register, Register, Register, u8),
+    DivuOLD(Rs, Rt, Rd, Shift),
+    Divu(Rs, Rt, Rd, Shift),
     /// Unsigned Mod
-    Modu(Register, Register, Register, u8),
+    Modu(Rs, Rt, Rd, Shift),
     /// Jump to Address
     J(u32),
     /// Jump and Link
     Jal(u32),
     /// Jump and Link Register
-    Jalr(Register, Register, Register, u8),
+    Jalr(Rs, Rt, Rd, Shift),
     /// Jump to Address in Register
-    Jr(Register, Register, Register, u8),
+    Jr(Rs, Rt, Rd, Shift),
     /// Load Byte
-    Lb(Register, Register, i16),
+    Lb(Rs, Rt, Immediate),
     /// Load Byte Unsigned
-    Lbu(Register, Register, i16),
+    Lbu(Rs, Rt, Immediate),
     /// Load Halfword Unsigned
-    Lhu(Register, Register, i16),
+    Lhu(Rs, Rt, Immediate),
     /// Load Upper Immediate
-    Lui(Register, Register, i16),
+    Lui(Rs, Rt, Immediate),
     /// Load Word
-    Lw(Register, Register, i16),
+    Lw(Rs, Rt, Immediate),
     /// Move from HI Register
-    Mfhi(Register, Register, Register, u8),
+    Mfhi(Rs, Rt, Rd, Shift),
     /// Move to HI Register
-    Mthi(Register, Register, Register, u8),
+    Mthi(Rs, Rt, Rd, Shift),
     /// Move from LO Register
-    Mflo(Register, Register, Register, u8),
+    Mflo(Rs, Rt, Rd, Shift),
     /// Move to LO Register
-    Mtlo(Register, Register, Register, u8),
+    Mtlo(Rs, Rt, Rd, Shift),
     /// Move from Coprocessor 0
-    Mfc0(Register, Register, Register, u8),
+    Mfc0(Rs, Rt, Rd, Shift),
     /// Multiply
-    Mult(Register, Register, Register, u8),
+    Mult(Rs, Rt, Rd, Shift),
     /// Unsigned Multiply
-    Multu(Register, Register, Register, u8),
+    Multu(Rs, Rt, Rd, Shift),
     /// Bitwise NOR
-    Nor(Register, Register, Register, u8),
+    Nor(Rs, Rt, Rd, Shift),
     /// Bitwise XOR (Exclusive-OR)
-    Xor(Register, Register, Register, u8),
+    Xor(Rs, Rt, Rd, Shift),
     /// Bitwise OR
-    Or(Register, Register, Register, u8),
+    Or(Rs, Rt, Rd, Shift),
     /// Bitwise OR Immediate
-    Ori(Register, Register, i16),
+    Ori(Rs, Rt, Immediate),
     /// Store Byte
-    Sb(Register, Register, i16),
+    Sb(Rs, Rt, Immediate),
     /// Store Halfword
-    Sh(Register, Register, i16),
+    Sh(Rs, Rt, Immediate),
     /// Set to 1 if Less Than
-    Slt(Register, Register, Register, u8),
+    Slt(Rs, Rt, Rd, Shift),
     /// Set to 1 if Less Than Immediate
-    Slti(Register, Register, i16),
+    Slti(Rs, Rt, Immediate),
     /// Set to 1 if Less Than Unsigned Immediate
-    Sltiu(Register, Register, i16),
+    Sltiu(Rs, Rt, Immediate),
     /// Set to 1 if Less Than Unsigned
-    Sltu(Register, Register, Register, u8),
+    Sltu(Rs, Rt, Rd, Shift),
     /// Logical Shift Left
-    Sll(Register, Register, Register, u8),
+    Sll(Rs, Rt, Rd, Shift),
     /// Logical Shift Right (0-extended)
-    Srl(Register, Register, Register, u8),
+    Srl(Rs, Rt, Rd, Shift),
     /// Arithmetic Shift Right (sign-extended)
-    Sra(Register, Register, Register, u8),
+    Sra(Rs, Rt, Rd, Shift),
     /// Subtract
-    Sub(Register, Register, Register, u8),
+    Sub(Rs, Rt, Rd, Shift),
     /// Unsigned Subtract
-    Subu(Register, Register, Register, u8),
+    Subu(Rs, Rt, Rd, Shift),
     /// Store Word
-    Sw(Register, Register, i16),
+    Sw(Rs, Rt, Immediate),
 }
 
 impl TryFrom<u32> for Instruction {
@@ -285,36 +292,33 @@ fn from_r_format(value: u32) -> Result<Instruction, Error> {
     let shift = (value >> 6) & MASK5;
     let opcode = (value >> 26) & MASK6;
 
-    let destination_r = ((value >> 11) & MASK5).try_into()?;
-    let source1_r = ((value >> 16) & MASK5).try_into()?;
-    let source0_r = ((value >> 21) & MASK5).try_into()?;
+    let rs = ((value >> 21) & MASK5).try_into()?;
+    let rt = ((value >> 16) & MASK5).try_into()?;
+    let rd = ((value >> 11) & MASK5).try_into()?;
 
     // mfc0 is the only R format instruction with a opcode that is not 0x00
     if opcode == 0x10 {
-        return Ok(Instruction::Mfc0(
-            destination_r,
-            source0_r,
-            source1_r,
-            shift as u8,
-        ));
+        return Ok(Instruction::Mfc0(rd, rs, rt, shift as u8));
     }
 
     // Find the correct instruction based on the funct
-    type InstrConstructor = Option<fn(Register, Register, Register, u8) -> Instruction>;
+    type InstrConstructor = Option<fn(Rs, Rt, Rd, Shift) -> Instruction>;
     let instruction: InstrConstructor = match funct {
         0x20 => Some(Instruction::Add),
         0x21 => Some(Instruction::Addu),
         0x24 => Some(Instruction::And),
-        0x1A => match shift { // MIPS32 version 6 operations
+        0x1A => match shift {
+            // MIPS32 version 6 operations
             0x02 => Some(Instruction::Div),
             0x03 => Some(Instruction::Mod),
-            _ => None // TODO: We don't handle DivOLD, the Div instruction before MIPS32 version 6
-        }
-        0x1B => match shift { // MIPS32 version 6 operations
+            _ => None, // TODO: We don't handle DivOLD, the Div instruction before MIPS32 version 6
+        },
+        0x1B => match shift {
+            // MIPS32 version 6 operations
             0x02 => Some(Instruction::Divu),
             0x03 => Some(Instruction::Modu),
-            _ => None // TODO: We don't handle DivuOLD, the Divu instruction before MIPS32 version 6
-        }
+            _ => None, // TODO: We don't handle DivuOLD, the Divu instruction before MIPS32 version 6
+        },
         0x09 => Some(Instruction::Jalr),
         0x08 => Some(Instruction::Jr),
         0x10 => Some(Instruction::Mfhi),
@@ -340,7 +344,7 @@ fn from_r_format(value: u32) -> Result<Instruction, Error> {
     // return an error
     instruction.map_or_else(
         || Err(Error::InvalidInstruction(value)),
-        |i| Ok(i(destination_r, source0_r, source1_r, shift as u8)),
+        |i| Ok(i(rs, rt, rd, shift as u8)),
     )
 }
 
@@ -348,11 +352,11 @@ fn from_r_format(value: u32) -> Result<Instruction, Error> {
 /// `opcode 6 | rs 5 | rt 5 | IMM 16`. Where IMM is the 16 bit immediate value.
 fn from_i_format(value: u32) -> Result<Instruction, Error> {
     let opcode = value >> 26;
-    let source0_r = ((value >> 21) & MASK5).try_into()?;
-    let source1_r = ((value >> 16) & MASK5).try_into()?;
+    let rs = ((value >> 21) & MASK5).try_into()?;
+    let rt = ((value >> 16) & MASK5).try_into()?;
     let immediate = (value & 0xFFFF) as i16;
 
-    let instruction: Option<fn(Register, Register, i16) -> Instruction> = match opcode {
+    let instruction: Option<fn(Rs, Rt, Immediate) -> Instruction> = match opcode {
         0x08 => Some(Instruction::Addi),
         0x0C => Some(Instruction::Andi),
         0x04 => Some(Instruction::Beq),
@@ -377,6 +381,6 @@ fn from_i_format(value: u32) -> Result<Instruction, Error> {
 
     instruction.map_or_else(
         || Err(Error::InvalidInstruction(value)),
-        |i| Ok(i(source0_r, source1_r, immediate)),
+        |i| Ok(i(rs, rt, immediate)),
     )
 }
