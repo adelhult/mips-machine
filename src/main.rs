@@ -92,6 +92,7 @@ fn report_error(error: Error) -> String {
     match error {
         Error::InvalidRegisterNumber(n) => format!("Invalid register number {n}"),
         Error::InvalidInstruction(instr) => format!("Invalid instruction \"{instr:x}\""),
+        Error::InvalidRegisterName(name) => format!("Invalid register name {name}"),
         Error::InstructionNotImplemented(instr) => {
             format!("Instruction \"{instr}\" not implemented yet")
         }

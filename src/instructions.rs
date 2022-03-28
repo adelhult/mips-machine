@@ -106,6 +106,61 @@ pub enum Register {
     Ra = 31,
 }
 
+impl TryFrom<&str> for Register {
+    type Error = Error;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        use Register::*;
+        match value {
+            "$zero" => Ok(Zero),
+            "$at" => Ok(At),
+            "$v0" => Ok(V0),
+            "$v1" => Ok(V1),
+            "$a0" => Ok(A0),
+            "$a1" => Ok(A1),
+            "$a2" => Ok(A2),
+            "$a3" => Ok(A3),
+            "$t0" => Ok(T0),
+            "$t1" => Ok(T1),
+            "$t2" => Ok(T2),
+            "$t3" => Ok(T3),
+            "$t4" => Ok(T4),
+            "$t5" => Ok(T5),
+            "$t6" => Ok(T6),
+            "$t7" => Ok(T7),
+            "$t8" => Ok(T8),
+            "$t9" => Ok(T9),
+            "$s0" => Ok(S0),
+            "$s1" => Ok(S1),
+            "$s2" => Ok(S2),
+            "$s3" => Ok(S3),
+            "$s4" => Ok(S4),
+            "$s5" => Ok(S5),
+            "$s6" => Ok(S6),
+            "$s7" => Ok(S7),
+            "$k0" => Ok(K0),
+            "$k1" => Ok(K1),
+            "$gp" => Ok(Gp),
+            "$sp" => Ok(Sp),
+            "$fp" => Ok(Fp),
+            "$ra" => Ok(Ra),
+            other => {
+                if other.starts_with('$') {
+                    let number = other
+                        .chars()
+                        .skip(1)
+                        .collect::<String>()
+                        .parse::<u32>()
+                        .map_err(|_| Error::InvalidRegisterName(other.into()))?;
+                    Register::try_from(number)
+                } else {
+                    Err(Error::InvalidRegisterName(other.into()))
+                }
+            }
+        }
+    }
+}
+
 impl TryFrom<u32> for Register {
     type Error = Error;
 
