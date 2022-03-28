@@ -58,15 +58,17 @@ impl Machine {
 
     /// Read a word starting at the given address
     pub fn read_word(&self, address: usize) -> u32 {
-        ((self.memory[address] as u32) << 24)
-            | ((self.memory[address + 1] as u32) << 16)
-            | ((self.memory[address + 2] as u32) << 8)
-            | (self.memory[address + 3] as u32)
+        u32::from_be_bytes([
+            self.memory[address],
+            self.memory[address + 1],
+            self.memory[address + 2],
+            self.memory[address + 3],
+        ])
     }
 
     /// Read a word starting at the given address
     pub fn read_halfword(&self, address: usize) -> u16 {
-        ((self.memory[address] as u16) << 8) | (self.memory[address + 1] as u16)
+        u16::from_be_bytes([self.memory[address], self.memory[address + 1]])
     }
 
     /// Read a byte starting at the given address

@@ -30,7 +30,8 @@ mod tests {
     fn write_halfword() {
         let mut machine = Machine::new();
         let x: &[u32] = &[0x20020100, 0x20030005, 0xa4430000, 0x20030006, 0xa4430002]; // our handassembled program
-        let v = x.iter()
+        let v = x
+            .iter()
             .copied()
             .map(|word| word.to_be_bytes().into_iter())
             .flatten()
