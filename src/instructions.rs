@@ -168,6 +168,7 @@ impl TryFrom<u32> for Register {
         use Register::*;
         match value {
             0 => Ok(Zero),
+            1 => Ok(At),
             2 => Ok(V0),
             3 => Ok(V1),
             4 => Ok(A0),
