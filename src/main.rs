@@ -2,10 +2,7 @@ use clap::Parser as CliParser;
 use colour::{green_ln, red_ln};
 use mips_machine::{Error, Machine, Parser, TEXT_BASE_ADDRESS};
 use read_input::prelude::*;
-use std::{
-    fs,
-    path::PathBuf,
-};
+use std::{fs, path::PathBuf};
 
 /// A simple MIPS virtual machine
 #[derive(CliParser, Debug)]
@@ -156,7 +153,7 @@ fn explain_error(error: Error) -> String {
         Error::Syntax(code) => format!("Error (syntax): {code}."),
         Error::InvalidRegisterNumber(n) => format!("Invalid register number {n}"),
         Error::InvalidInstruction(instr) => format!("Invalid instruction \"{instr:x}\""),
-        Error::InvalidRegisterName(name) => format!("Invalid register name {name}"),
+        Error::InvalidRegisterName(name) => format!("Invalid register name \"{name}\"."),
         Error::InvalidDirective(directive) => format!("No directive \"{directive}\" supported"),
         Error::AddressOutOfRange(n) => format!("Address {n} is out of range"),
         Error::BadOperand(s) => s,

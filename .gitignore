@@ -1,3 +1,4 @@
 /target
 Cargo.lock
 memory_test.mem
+assembly_test.asm

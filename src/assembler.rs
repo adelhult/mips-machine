@@ -91,12 +91,18 @@ impl<'a> Parser<'a> {
                 return Some(token.trim().to_string());
             }
 
+            // extra whitespaces characters should be skipepd
+            if c.is_whitespace() {
+                continue;
+            }
+            // finally, we can add the character to the current token
             token.push(c);
         }
         // return the final token if there is one
         if token.is_empty() {
             None
         } else {
+            dbg!(token.trim().to_string());
             Some(token.trim().to_string())
         }
     }
@@ -294,7 +300,7 @@ impl<'a> Parser<'a> {
             "slti" => todo!(),
             "sltiu" => todo!(),
             "sw" => todo!(),
-            token => Err(Error::Syntax(format!("Unknown token {token}"))),
+            token => Err(Error::Syntax(format!("Unknown token \"{token}\""))),
         }
     }
 
