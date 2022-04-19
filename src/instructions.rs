@@ -1,5 +1,5 @@
 use crate::error::Error;
-
+use std::fmt;
 /// All of  the general purpose registers that
 /// are allowed to be used.
 ///
@@ -104,6 +104,54 @@ pub enum Register {
 
     /// Return address
     Ra = 31,
+
+    /// A non-existing register used for filling gaps in irregular instructions like `jalr`.
+    Unused
+}
+
+impl fmt::Display for Register {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        use Register::*;
+        write!(
+            f,
+            "${}",
+            match self {
+                Zero => "zero",
+                At => "at",
+                V0 => "v0",
+                V1 => "v1",
+                A0 => "a0",
+                A1 => "a1",
+                A2 => "a2",
+                A3 => "a3",
+                T0 => "t0",
+                T1 => "t1",
+                T2 => "t2",
+                T3 => "t3",
+                T4 => "t4",
+                T5 => "t5",
+                T6 => "t6",
+                T7 => "t7",
+                T8 => "t8",
+                T9 => "t9",
+                S0 => "s0",
+                S1 => "s1",
+                S2 => "s2",
+                S3 => "s3",
+                S4 => "s4",
+                S5 => "s5",
+                S6 => "s6",
+                S7 => "s7",
+                K0 => "k0",
+                K1 => "k1",
+                Gp => "gp",
+                Sp => "sp",
+                Fp => "fp",
+                Ra => "ra",
+                Unused => panic!("The unused register may note be used"),
+            }
+        )
+    }
 }
 
 impl TryFrom<&str> for Register {
@@ -255,7 +303,7 @@ pub enum Instruction {
     /// Jump to Address in Register
     Jr(Rs, Rt, Rd, Shift),
     /// Load Byte
-    Lb(Rs, Rt, Immediate),
+    Lb(Register, Rt, Immediate),
     /// Load Byte Unsigned
     Lbu(Rs, Rt, Immediate),
     /// Load Halfword Unsigned
@@ -439,4 +487,71 @@ fn from_i_format(value: u32) -> Result<Instruction, Error> {
         || Err(Error::InvalidInstruction(value)),
         |i| Ok(i(rs, rt, immediate)),
     )
+}
+
+impl fmt::Display for Instruction {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        use Instruction::*;
+        write!(
+            f,
+            "{}",
+            match self {
+                Add(rs, rt, rd, _) => format!("add {rd}, {rs}, {rt}"),
+                Addi(rs, rt, imm) => format!("addi {rt}, {rs}, {imm}"),
+                Addiu(rs, rt, imm) => format!("addiu {rt}, {rs}, {imm}"),
+                Addu(rs, rt, rd, _) => format!("addu {rd}, {rs}, {rt}"),
+                And(rs, rt, rd, _) => format!("and {rd}, {rs}, {rt}"),
+                Andi(rs, rt, imm) => format!("andi {rt}, {rs}, {imm}"),
+                Beq(rs, rt, offset) => format!("beq {rs}, {rt}, offset:{offset}"),
+                Blez(rs, _, offset) => format!("blez {rs}, offset:{offset}"),
+                Bne(rs, rt, offset) => format!("bne {rs}, {rt}, offset:{offset}"),
+                Bgtz(rs, _, offset) => format!("bgtz {rs}, offset:{offset}"),
+                DivOLD(_, _, _, _) => "divOLD".to_string(),
+                Div(rs, rt, rd, _) => format!("div {rd}, {rs}, {rt}"),
+                Mod(rs, rt, rd, _) => format!("mod {rd}, {rs}, {rt}"),
+                DivuOLD(_, _, _, _) => "divuOLD".to_string(),
+                Divu(rs, rt, rd, _) => format!("divu {rd}, {rs}, {rt}"),
+                Modu(rs, rt, rd, _) => format!("modu {rd}, {rs}, {rt}"),
+                J(addr) => format!("j pseudo-address:{addr}"),
+                Jal(addr) => format!("jal pseudo-address:{addr}"),
+                Jalr(rs, _, rd, _) => format!("jalr {rd}, {rs}"),
+                Jr(rs, _, _, _) => format!("jr {rs}"),
+                Lb(base, rt, offset) => format!("lb {rt} {offset}({base})"),
+                Lbu(base, rt, offset) => format!("lbu {rt}, {offset}({base})"),
+                Lhu(base, rt, offset) => format!("lhu {rt}, {offset}({base})"),
+                Lui(_, rt, imm) => format!("lui {rt}, {imm}"),
+                Lw(base, rt, offset) => format!("lw {rt} {offset}({base})"),
+                Mfhi(rs, rt, rd, _) => format!("mfhi {rd}, {rs}, {rt}"),
+                Mthi(_, _, rd, _) => format!("mfhi {rd}"),
+                Mflo(_, _, rd, _) => format!("mflo {rd}"),
+                Mtlo(rs, _, _, _) => format!("mtlo {rs}"),
+                Mfc0(_, rt, rd, _) => format!("mfc0 {rt}, {rd}"),
+                Mult(rs, rt, _, _) => format!("mult {rs}, {rt}"),
+                Multu(rs, rt, _, _) => format!("multu {rs}, {rt}"),
+                Nor(rs, rt, rd, _) => format!("nor {rd}, {rs}, {rt}"),
+                Xor(rs, rt, rd, _) => format!("xor {rd}, {rs}, {rt}"),
+                Or(rs, rt, rd, _) => format!("or {rd}, {rs}, {rt}"),
+                Ori(rs, rt, imm) => format!("ori {rt}, {rs}, {imm}"),
+                Sb(base, rt, offset) => format!("sb {rt} {offset}({base})"),
+                Sh(base, rt, offset) => format!("sh {rt} {offset}({base})"),
+                Slt(rs, rt, rd, _) => format!("slt {rd}, {rs}, {rt}"),
+                Slti(rs, rt, imm) => format!("slti {rt}, {rs}, {imm}"),
+                Sltiu(rs, rt, imm) => format!("sltiu {rt}, {rs}, {imm}"),
+                Sltu(rs, rt, rd, _) => format!("sltu {rd}, {rs}, {rt}"),
+                Sll(_, rt, rd, sa) => {
+                    // noop if both registers are zero and sa is zero
+                    if *rt == Register::Zero && *rd == Register::Zero && *sa == 0 {
+                        "nop".to_string()
+                    } else {
+                        format!("sll {rd}, {rt}, {sa}")
+                    }
+                }
+                Srl(_, rt, rd, sa) => format!("srl {rd}, {rt}, {sa}"),
+                Sra(_, rt, rd, sa) => format!("sra {rd}, {rt}, {sa}"),
+                Sub(rs, rt, rd, _) => format!("sub {rd}, {rs}, {rt}"),
+                Subu(rs, rt, rd, _) => format!("subu {rd}, {rs}, {rt}"),
+                Sw(base, rt, offset) => format!("sw {rt} {offset}({base})"),
+            }
+        )
+    }
 }

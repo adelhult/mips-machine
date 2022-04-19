@@ -1,9 +1,11 @@
+mod assembler;
 mod error;
 mod instructions;
 mod machine;
 pub use self::error::Error;
 pub use self::instructions::*;
 pub use self::machine::*;
+pub use assembler::Parser;
 
 #[cfg(test)]
 mod tests {

@@ -5,4 +5,9 @@ pub enum Error {
     InvalidInstruction(u32),
     InvalidRegisterName(String),
     InstructionNotImplemented(String),
+    Syntax(String),
+    InvalidDirective(String),
+    AddressOutOfRange(usize),
+    BadOperand(String),
+    UndefinedLabel(String),
 }

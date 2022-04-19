@@ -1,7 +1,11 @@
 use crate::error::Error;
 use crate::instructions::*;
 
-pub const MEMORY_SIZE: usize = 1024;
+pub const MEMORY_SIZE: usize = 0x7FFF; // 4096 bytes
+pub const STACK_BASE_ADDRESS: usize = 0x7FFF;
+pub const HEAP_BASE_ADDRESS: usize = 0x3000;
+pub const DATA_BASE_ADDRESS: usize = 0x2000;
+pub const TEXT_BASE_ADDRESS: usize = 0x0000;
 
 pub struct Machine {
     pc: u32,
@@ -13,7 +17,7 @@ impl Machine {
     /// Create a new machine with every address and register set to 0.
     pub fn new() -> Self {
         Self {
-            pc: 0,
+            pc: TEXT_BASE_ADDRESS as u32,
             registers: [0; 32],
             memory: [0; MEMORY_SIZE],
         }
@@ -396,6 +400,10 @@ impl Machine {
 
     /// Set a register to a given value
     fn set_register(&mut self, r: Register, value: u32) {
+        // You are not allowed to assign values to register $zero.
+        if r == Register::Zero {
+            return;
+        }
         self.registers[r as usize] = value;
     }
 }
