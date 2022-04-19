@@ -91,7 +91,7 @@ impl<'a> Parser<'a> {
                 return Some(token.trim().to_string());
             }
 
-            // extra whitespaces characters should be skipepd
+            // extra whitespaces characters should be skipped
             if c.is_whitespace() {
                 continue;
             }
@@ -102,7 +102,6 @@ impl<'a> Parser<'a> {
         if token.is_empty() {
             None
         } else {
-            dbg!(token.trim().to_string());
             Some(token.trim().to_string())
         }
     }
