@@ -221,7 +221,7 @@ impl<'a> Parser<'a> {
     fn parse_instruction(&mut self, operation: String) -> Result<Vec<Instruction>, Error> {
         use Instruction::*;
         // FIXME: note that some instructions like mfhi and mult etc. are not included in the parsing
-        // since they are currently just implemented as TODOS and throws an in the virtual machine.
+        // since they are currently just implemented as TODOS and throws an Error in the virtual machine.
         match operation.to_lowercase().as_str() {
             "add" => self.parse_r_format(Add, Some(0)),
             "addu" => self.parse_r_format(Addu, Some(0)),

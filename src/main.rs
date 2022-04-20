@@ -62,7 +62,7 @@ fn main() {
 
                 machine.set_pc(pc as u32);
 
-                println!("Created a machine based on the assembly file.");
+                println!("Created a machine based on the given assembly file.");
             }
 
             // create a machine based on the memory file
@@ -74,8 +74,9 @@ fn main() {
                     if let Some(pc) = args.pc {
                         machine.set_pc(pc as u32);
                     }
+                    println!("Created a machine based on the given memory file.");
                 } else {
-                    red_ln!("Sorry, I failed to read the file!");
+                    red_ln!("Sorry, I failed to parse the memory file!");
                     return;
                 }
             }
