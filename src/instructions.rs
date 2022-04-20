@@ -493,6 +493,87 @@ fn from_i_format(value: u32) -> Result<Instruction, Error> {
     )
 }
 
+impl From<Instruction> for u32 {
+    fn from(val: Instruction) -> Self {
+        match val {
+            Instruction::Add(rs, rt, rd, _) => to_r_format(0, rs, rt, rd, 0, 0b100000),
+            Instruction::Addi(rs, rt, imm) => to_i_format(0b001000, rs, rt, imm),
+            Instruction::Addiu(rs, rt, imm) => to_i_format(0b001001, rs, rt, imm),
+            Instruction::Addu(rs, rt, rd, _) => to_r_format(0, rs, rt, rd, 0, 0b100001),
+            Instruction::And(rs, rt, rd, _) => to_r_format(0, rs, rt, rd, 0, 0b100100),
+            Instruction::Andi(rs, rt, imm) => to_i_format(0b001000, rs, rt, imm),
+            Instruction::Beq(rs, rt, offset) => to_i_format(0b000100, rs, rt, offset),
+            Instruction::Blez(rs, _, offset) => to_i_format(0b000110, rs, Register::Zero, offset),
+            Instruction::Bne(rs, rt, offset) => to_i_format(0b000101, rs, rt, offset),
+            Instruction::Bgtz(rs, _, offset) => to_i_format(0b000111, rs, Register::Zero, offset),
+            Instruction::DivOLD(_, _, _, _) => panic!("Serialize error: DivOLD not implemented"),
+            Instruction::Div(rs, rt, rd, _) => to_r_format(0, rs, rt, rd, 0b00010, 0b011010),
+            Instruction::Mod(rs, rt, rd, _) => to_r_format(0, rs, rt, rd, 0b00011, 0b011010),
+            Instruction::DivuOLD(_, _, _, _) => panic!("Serialize erorr: DivuOLD not implemented"),
+            Instruction::Divu(rs, rt, rd, _) => to_r_format(0, rs, rt, rd, 0b00010, 0b011011),
+            Instruction::Modu(rs, rt, rd, _) => to_r_format(0, rs, rt, rd, 0b00011, 0b011011),
+            Instruction::J(instr_index) => 0b000010 << 26 | instr_index,
+            Instruction::Jal(instr_index) => 0b000011 << 26 | instr_index,
+            Instruction::Jalr(rs, _, rd, hint) => {
+                to_r_format(0, rs, Register::Zero, rd, hint, 0b001001)
+            }
+            Instruction::Jr(rs, _, _, hint) => {
+                to_r_format(0, rs, Register::Zero, Register::Zero, hint, 0b001000)
+            }
+            Instruction::Lb(base, rt, offset) => to_i_format(0b100000, base, rt, offset),
+            Instruction::Lbu(base, rt, offset) => to_i_format(0b100100, base, rt, offset),
+            Instruction::Lhu(base, rt, offset) => to_i_format(0b100101, base, rt, offset),
+            Instruction::Lui(_, rt, imm) => to_i_format(0b001111, Register::Zero, rt, imm),
+            Instruction::Lw(base, rt, offset) => to_i_format(0b100011, base, rt, offset),
+            Instruction::Mfhi(_, _, _, _) => panic!("Serialize error: Mfhi not implemented"),
+            Instruction::Mthi(_, _, _, _) => panic!("Serialize error: Mthi not implemented"),
+            Instruction::Mflo(_, _, _, _) => panic!("Serialize error: Mflo not implemented"),
+            Instruction::Mtlo(_, _, _, _) => panic!("Serialize error: Mtlo not implemented"),
+            Instruction::Mfc0(_, _, _, _) => panic!("Serialize error: Mfc0 not implemented"),
+            Instruction::Mult(_, _, _, _) => panic!("Serialize error: Mult not implemented"),
+            Instruction::Multu(_, _, _, _) => panic!("Serialize error: Multu not implemented"),
+            Instruction::Nor(rs, rt, rd, _) => to_r_format(0, rs, rt, rd, 0, 0b100111),
+            Instruction::Xor(rs, rt, rd, _) => to_r_format(0, rs, rt, rd, 0, 0b100110),
+            Instruction::Or(rs, rt, rd, _) => to_r_format(0, rs, rt, rd, 0, 0b100101),
+            Instruction::Ori(rs, rt, imm) => to_i_format(0b001101, rs, rt, imm),
+            Instruction::Sb(base, rt, offset) => to_i_format(0b101000, base, rt, offset),
+            Instruction::Sh(base, rt, offset) => to_i_format(0b101001, base, rt, offset),
+            Instruction::Slt(rs, rt, rd, _) => to_r_format(0, rs, rt, rd, 0, 0b101010),
+            Instruction::Slti(rs, rt, imm) => to_i_format(0b001010, rs, rt, imm),
+            Instruction::Sltiu(rs, rt, imm) => to_i_format(0b001011, rs, rt, imm),
+            Instruction::Sltu(rs, rt, rd, _) => to_r_format(0, rs, rt, rd, 0, 0b101011),
+            Instruction::Sll(_, rt, rd, sa) => to_r_format(0, Register::Zero, rt, rd, sa, 0b000000),
+            Instruction::Srl(_, rt, rd, sa) => to_r_format(0, Register::Zero, rt, rd, sa, 0b000010),
+            Instruction::Sra(_, rt, rd, sa) => to_r_format(0, Register::Zero, rt, rd, sa, 0b000011),
+            Instruction::Sub(rs, rt, rd, _) => to_r_format(0, rs, rt, rd, 0, 0b100010),
+            Instruction::Subu(rs, rt, rd, _) => to_r_format(0, rs, rt, rd, 0, 0b100011),
+            Instruction::Sw(base, rt, offset) => to_i_format(0b101011, base, rt, offset),
+        }
+    }
+}
+
+/// Serialize a r_format instruction into a u32. Format:
+/// `opcode 6 bits | rs 5 bits | rt 5 bits | rd 5 bits | shift 5 bits | funct 6 bits`  
+fn to_r_format(opcode: u8, rs: Register, rt: Register, rd: Register, shift: u8, funct: u8) -> u32 {
+    let opcode = (opcode as u32) << 26;
+    let rs = (rs as u32) << 21;
+    let rt = (rt as u32) << 16;
+    let rd = (rd as u32) << 11;
+    let shift = (shift as u32) << 6;
+
+    opcode | rs | rt | rd | shift | (funct as u32)
+}
+
+/// Serialize a i_format instruction into a u32. Format:
+/// `opcode 6 bits | rs 5 bits | rt 5 bits | immediate 16 bits`
+fn to_i_format(opcode: u8, rs: Register, rt: Register, imm: i16) -> u32 {
+    let opcode = (opcode as u32) << 26;
+    let rs = (rs as u32) << 21;
+    let rt = (rt as u32) << 16;
+
+    opcode | rs | rt | (imm as u32)
+}
+
 impl fmt::Display for Instruction {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         use Instruction::*;

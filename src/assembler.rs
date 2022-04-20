@@ -52,7 +52,9 @@ impl<'a> Parser<'a> {
             } else {
                 // all other tokens are assumed to be instructions
                 let instructions = self.parse_instruction(token)?;
-                // FIXME: use the instructions and convert them into actual memory data
+                for instruction in instructions {
+                    self.place_word(instruction.into())?;
+                }
             }
         }
 
@@ -146,6 +148,14 @@ impl<'a> Parser<'a> {
         Ok(())
     }
 
+    fn place_word(&mut self, word: u32) -> Result<(), Error> {
+        self.place_byte(word as u8)?;
+        self.place_byte((word >> 8) as u8)?;
+        self.place_byte((word >> 16) as u8)?;
+        self.place_byte((word >> 24) as u8)?;
+        Ok(())
+    }
+
     fn parse_directive(&mut self, directive: String) -> Result<(), Error> {
         match directive.as_str() {
             "ascii" => {
@@ -207,10 +217,7 @@ impl<'a> Parser<'a> {
             "word" => {
                 let word: u32 =
                     self.try_consume_operand(".word takes a 32-bit word as an operand")?;
-                self.place_byte(word as u8)?;
-                self.place_byte((word >> 8) as u8)?;
-                self.place_byte((word >> 16) as u8)?;
-                self.place_byte((word >> 24) as u8)?;
+                self.place_word(word)?;
                 Ok(())
             }
             //TODO: "align" => (),

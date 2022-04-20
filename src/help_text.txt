@@ -1,0 +1,13 @@
+Hi! Welcome to the MIPS virtual machine.
+
+You can load and assemble a file by running
+$ machine program.asm
+
+...or directly load a memory file
+$ machine memory.mem
+
+When interacting with the machine try one of the following commands:
+step        - Run one instruction
+step <n>    - Run n instructions
+exit        - Exit the CLI program
+help        - Display this message

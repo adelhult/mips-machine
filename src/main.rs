@@ -1,6 +1,6 @@
 use clap::Parser as CliParser;
-use colour::{green_ln, red_ln};
-use mips_machine::{Error, Machine, Parser, TEXT_BASE_ADDRESS};
+use colour::{blue, green_ln, red_ln};
+use mips_machine::{Error, Instruction, Machine, Parser, Register, TEXT_BASE_ADDRESS};
 use read_input::prelude::*;
 use std::{fs, path::PathBuf};
 
@@ -100,19 +100,81 @@ fn main() {
 /// Starts a interactive REPL style session using the given machine
 fn start_interact_mode(machine: &mut Machine) {
     loop {
-        let current_pc = machine.read_pc();
-        match input::<String>()
-            .msg(format!("(PC={current_pc}) Command: "))
-            .get()
-            .as_str()
-            .trim()
+        let command = get_command("> ");
+        match command
+            .iter()
+            .map(|s| s.as_str())
+            .collect::<Vec<&str>>()
+            .as_slice()
         {
-            "help" => help(),
-            "exit" => break,
-            "step" => step(machine),
-            other => println!("There is no \"{other}\" command. Try \"help\"."),
+            ["help"] => help(),
+            ["step", n] => {
+                if let Ok(n) = n.parse() {
+                    step(machine, n);
+                } else {
+                    red_ln!("Invalid number of steps \"{}\"!", n);
+                }
+            }
+            ["step"] => step(machine, 1),
+            ["print", things @ ..] => print(machine, things),
+            ["exit"] => break,
+            _ => println!(
+                "There is no \"{}\" command. Try \"help\".",
+                command.join(" ")
+            ),
         }
     }
+}
+
+/// Print a register or a memory address
+fn print(machine: &mut Machine, things: &[&str]) {
+    for thing in things {
+        // did the user provide a register?
+        if let Ok(register) = Register::try_from(*thing) {
+            blue!("{}", register);
+            println!(" = {:#x}", machine.read_register(register));
+            continue;
+        }
+
+        // if not, check if they provided a number in decimal form
+        if let Ok(addr) = thing.parse() {
+            print_addr(machine, addr);
+            continue;
+        }
+
+        // or in hex "0x123" format
+        if let Ok(addr) = usize::from_str_radix(thing.trim_start_matches("0x"), 16) {
+            print_addr(machine, addr);
+            continue;
+        }
+
+        red_ln!("\"{}\" is not a register name nor a memory address.", thing);
+    }
+}
+
+fn print_addr(machine: &mut Machine, addr: usize) {
+    let word = machine.read_word(addr);
+
+    blue!("{:#06x}", addr);
+    print!(" = {:#010x}", word);
+
+    if let Ok(instruction) = Instruction::try_from(word) {
+        println!("   {}", instruction);
+    } else {
+        println!();
+    }
+}
+
+/// Prompt the user for input and collect a list of commands/args
+fn get_command(prompt: &str) -> Vec<String> {
+    input::<String>()
+        .msg(prompt)
+        .get()
+        .as_str()
+        .trim()
+        .split_whitespace()
+        .map(|s| s.to_string())
+        .collect()
 }
 
 /// Get a vec of bytes given a filename to read
@@ -129,24 +191,23 @@ fn parse_mem_file(content: &str) -> Option<Vec<u8>> {
     Some(memory)
 }
 
-fn step(machine: &mut Machine) {
-    match machine.step() {
-        Err(error) => {
-            let msg = explain_error(error);
-            red_ln!("Error: {}.", msg);
-        }
-        Ok(instruction) => {
-            let i = instruction;
-            green_ln!("Executed {}", i);
+fn step(machine: &mut Machine, n: u32) {
+    for _ in 0..n {
+        match machine.step() {
+            Err(error) => {
+                let msg = explain_error(error);
+                red_ln!("Error: {}.", msg);
+            }
+            Ok(instruction) => {
+                let i = instruction;
+                green_ln!("Executed {}", i);
+            }
         }
     }
 }
 
 fn help() {
-    println!(
-        "Welcome to this simple demo CLI. Available commands:\n\
-    help, step, exit"
-    );
+    println!(include_str!("help_text.txt"));
 }
 
 fn explain_error(error: Error) -> String {
