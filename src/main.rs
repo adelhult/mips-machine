@@ -129,6 +129,13 @@ fn start_interact_mode(machine: &mut Machine) {
 /// Print a register or a memory address
 fn print(machine: &mut Machine, things: &[&str]) {
     for thing in things {
+        // do they want pc to be printed?
+        if *thing == "pc" {
+            blue!("pc");
+            println!(" = {:#x}", machine.read_pc());
+            continue;
+        }
+
         // did the user provide a register?
         if let Ok(register) = Register::try_from(*thing) {
             blue!("{}", register);
