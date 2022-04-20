@@ -106,7 +106,7 @@ pub enum Register {
     Ra = 31,
 
     /// A non-existing register used for filling gaps in irregular instructions like `jalr`.
-    Unused
+    Unused,
 }
 
 impl fmt::Display for Register {
@@ -157,42 +157,44 @@ impl fmt::Display for Register {
 impl TryFrom<&str> for Register {
     type Error = Error;
 
+    /// Convert a string into a register
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         use Register::*;
         match value {
-            "$zero" => Ok(Zero),
-            "$at" => Ok(At),
-            "$v0" => Ok(V0),
-            "$v1" => Ok(V1),
-            "$a0" => Ok(A0),
-            "$a1" => Ok(A1),
-            "$a2" => Ok(A2),
-            "$a3" => Ok(A3),
-            "$t0" => Ok(T0),
-            "$t1" => Ok(T1),
-            "$t2" => Ok(T2),
-            "$t3" => Ok(T3),
-            "$t4" => Ok(T4),
-            "$t5" => Ok(T5),
-            "$t6" => Ok(T6),
-            "$t7" => Ok(T7),
-            "$t8" => Ok(T8),
-            "$t9" => Ok(T9),
-            "$s0" => Ok(S0),
-            "$s1" => Ok(S1),
-            "$s2" => Ok(S2),
-            "$s3" => Ok(S3),
-            "$s4" => Ok(S4),
-            "$s5" => Ok(S5),
-            "$s6" => Ok(S6),
-            "$s7" => Ok(S7),
-            "$k0" => Ok(K0),
-            "$k1" => Ok(K1),
-            "$gp" => Ok(Gp),
-            "$sp" => Ok(Sp),
-            "$fp" => Ok(Fp),
-            "$ra" => Ok(Ra),
+            "$zero" | "zero" => Ok(Zero),
+            "$at" | "at" => Ok(At),
+            "$v0" | "v0" => Ok(V0),
+            "$v1" | "v1" => Ok(V1),
+            "$a0" | "a0" => Ok(A0),
+            "$a1" | "a1" => Ok(A1),
+            "$a2" | "a2" => Ok(A2),
+            "$a3" | "a3" => Ok(A3),
+            "$t0" | "t0" => Ok(T0),
+            "$t1" | "t1" => Ok(T1),
+            "$t2" | "t2" => Ok(T2),
+            "$t3" | "t3" => Ok(T3),
+            "$t4" | "t4" => Ok(T4),
+            "$t5" | "t5" => Ok(T5),
+            "$t6" | "t6" => Ok(T6),
+            "$t7" | "t7" => Ok(T7),
+            "$t8" | "t8" => Ok(T8),
+            "$t9" | "t9" => Ok(T9),
+            "$s0" | "s0" => Ok(S0),
+            "$s1" | "s1" => Ok(S1),
+            "$s2" | "s2" => Ok(S2),
+            "$s3" | "s3" => Ok(S3),
+            "$s4" | "s4" => Ok(S4),
+            "$s5" | "s5" => Ok(S5),
+            "$s6" | "s6" => Ok(S6),
+            "$s7" | "s7" => Ok(S7),
+            "$k0" | "k0" => Ok(K0),
+            "$k1" | "k1" => Ok(K1),
+            "$gp" | "gp" => Ok(Gp),
+            "$sp" | "sp" => Ok(Sp),
+            "$fp" | "fp" => Ok(Fp),
+            "$ra" | "ra" => Ok(Ra),
             other => {
+                // if they did not give a symbol name, check if they gave a valid number "$n".
                 if other.starts_with('$') {
                     let number = other
                         .chars()
