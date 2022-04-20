@@ -264,6 +264,8 @@ type Immediate = i16;
 /// Machine instructions (a subset of MIPS32).
 ///
 /// Reference: <https://s3-eu-west-1.amazonaws.com/downloads-mips/documents/MD00086-2B-MIPS32BIS-AFP-6.06.pdf>
+/// Note that the instruction struct reflects the serialized format and in some cases one or
+/// more fields should always be filled with a Register::Unused value.
 #[derive(Debug, PartialEq)]
 pub enum Instruction {
     /// Add
@@ -365,12 +367,12 @@ pub enum Instruction {
 impl TryFrom<u32> for Instruction {
     type Error = Error;
 
+    /// Deserialize a word into a instruction.
     fn try_from(value: u32) -> Result<Self, Self::Error> {
         let opcode = value >> 26;
         match opcode {
             0x00 | 0x10 => from_r_format(value),
-            0x02 => from_j_format(value), // Instruction::J(...),
-            0x03 => from_j_format(value), // Instruction::Jal(...),
+            0x02 | 0x3 => from_j_format(value),
             _ => from_i_format(value),
         }
     }
