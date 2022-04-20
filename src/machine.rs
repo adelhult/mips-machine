@@ -220,7 +220,7 @@ impl Machine {
             }
 
             // TODO: Control Transfer Instructions (CTIs) should not be placed in branch delay slots or Release 6 forbidden slots.
-            Instruction::Jalr(rd, rs, _, _hint) => {
+            Instruction::Jalr(rs, _, rd, _hint) => {
                 // TODO: The return link is the address of the second instruction following the branch,
                 // where execution continues after a procedure call. <--- what does this really
                 // mean? // Enaya
@@ -230,7 +230,7 @@ impl Machine {
 
             // TODO: Control Transfer Instructions (CTIs) should not be placed in branch delay slots or Release 6 forbidden slots.
             // TODO:  Execute the instruction following the jump, in the branch delay slot, before jumping. <---- what????? // Enaya
-            Instruction::Jr(_, rs, _, _hint) => {
+            Instruction::Jr(rs, _, _, _hint) => {
                 self.set_pc(self.read_register(rs));
             }
 
@@ -290,13 +290,13 @@ impl Machine {
             }
 
             // TODO: No arithmetic exceptions occur. Division by zero produces an UNPREDICTABLE result.
-            Instruction::Mod(rd, rs, rt, _) => {
+            Instruction::Mod(rs, rt, rd, _) => {
                 let result = self.op(rs, rt, |a, b| (a as i32).rem_euclid(b as i32) as u32);
                 self.set_register(rd, result);
             }
 
             // TODO: No arithmetic exceptions occur. Division by zero produces an UNPREDICTABLE result.
-            Instruction::Modu(rd, rs, rt, _) => {
+            Instruction::Modu(rs, rt, rd, _) => {
                 let result = self.op(rs, rt, |a, b| a % b);
                 self.set_register(rd, result);
             }
@@ -311,17 +311,17 @@ impl Machine {
                 return Err(Error::InstructionNotImplemented("multu".into()))
             }
 
-            Instruction::Nor(rd, rs, rt, _) => {
+            Instruction::Nor(rs, rt, rd, _) => {
                 let res = self.op(rs, rt, |a, b| !(a | b));
                 self.set_register(rd, res);
             }
 
-            Instruction::Xor(rd, rs, rt, _) => {
+            Instruction::Xor(rs, rt, rd, _) => {
                 let res = self.op(rs, rt, |a, b| (a ^ b));
                 self.set_register(rd, res);
             }
 
-            Instruction::Or(rd, rs, rt, _) => {
+            Instruction::Or(rs, rt, rd, _) => {
                 let res = self.op(rs, rt, |a, b| a | b);
                 self.set_register(rd, res);
             }
@@ -338,7 +338,7 @@ impl Machine {
                 self.write_halfword(dest_adr as usize, self.read_register(rt) as u16);
             }
 
-            Instruction::Slt(rd, rs, rt, _) => {
+            Instruction::Slt(rs, rt, rd, _) => {
                 self.set_register(
                     rd,
                     ((self.read_register(rs) as i32) < (self.read_register(rt) as i32)) as u32,
@@ -356,31 +356,31 @@ impl Machine {
                 self.set_register(rt, (self.read_register(rs) < (immediate as u32)) as u32);
             }
 
-            Instruction::Sltu(rd, rs, rt, _) => {
+            Instruction::Sltu(rs, rt, rd, _) => {
                 self.set_register(rd, self.op(rs, rt, |a, b| (a < b) as u32))
             }
 
-            Instruction::Sll(rd, _, rt, sa) => {
+            Instruction::Sll(_, rt, rd, sa) => {
                 self.set_register(rd, self.read_register(rt) << sa);
             }
 
-            Instruction::Srl(rd, _, rt, sa) => {
+            Instruction::Srl(_, rt, rd, sa) => {
                 self.set_register(rd, self.read_register(rt) >> sa);
             }
 
-            Instruction::Sra(rd, _, rt, sa) => {
+            Instruction::Sra(_, rt, rd, sa) => {
                 // The language will give you either LSR or ASR, depending on what type integer you give it
                 self.set_register(rd, (self.read_register(rt) as i32 >> sa) as u32);
             }
 
             // TODO: If the subtraction results in 32-bit 2’s complement arithmetic overflow,
             // then the destination register is not modified and an Integer Overflow exception occurs.
-            Instruction::Sub(rd, rs, rt, _) => {
+            Instruction::Sub(rs, rt, rd, _) => {
                 let res = self.op(rs, rt, |a, b| ((a as i32) - (b as i32)) as u32);
                 self.set_register(rd, res);
             }
 
-            Instruction::Subu(rd, rs, rt, _) => {
+            Instruction::Subu(rs, rt, rd, _) => {
                 let res = self.op(rs, rt, |a, b| a - b);
                 self.set_register(rd, res);
             }
