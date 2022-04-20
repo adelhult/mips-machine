@@ -7,7 +7,8 @@ $ machine program.asm
 $ machine memory.mem
 
 When interacting with the machine try one of the following commands:
-step        - Run one instruction
-step <n>    - Run n instructions
-exit        - Exit the CLI program
-help        - Display this message
+step             - Run one instruction
+step <n>         - Run n instructions
+print $t0 pc 0x1 - Print the content of reg/pc/mem addr 
+exit             - Exit the CLI
+help             - Display this message
