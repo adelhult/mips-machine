@@ -189,7 +189,7 @@ fn parse_mem_file(content: &str) -> Option<Vec<u8>> {
     let mut memory = Vec::new();
     for line in content.lines() {
         // every line should contain a word written in hex format
-        let word = u32::from_str_radix(line, 16).ok()?;
+        let word = u32::from_str_radix(line.trim(), 16).ok()?;
         memory.push((word >> 24) as u8);
         memory.push(((word >> 16) & 0xFF) as u8);
         memory.push(((word >> 8) & 0xFF) as u8);

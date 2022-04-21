@@ -82,16 +82,16 @@ impl Machine {
 
     /// Write a word starting at the given word-aligned address
     pub fn write_word(&mut self, address: usize, word: u32) {
-        self.memory[address] = word as u8;
-        self.memory[address + 1] = (word >> 8) as u8;
-        self.memory[address + 2] = (word >> 16) as u8;
-        self.memory[address + 3] = (word >> 24) as u8;
+        self.memory[address + 3] = word as u8;
+        self.memory[address + 2] = (word >> 8) as u8;
+        self.memory[address + 1] = (word >> 16) as u8;
+        self.memory[address] = (word >> 24) as u8;
     }
 
     /// Write a halfword starting at the given halfword-aligned address
     pub fn write_halfword(&mut self, address: usize, halfword: u16) {
-        self.memory[address] = halfword as u8;
-        self.memory[address + 1] = (halfword >> 8) as u8;
+        self.memory[address + 1] = halfword as u8;
+        self.memory[address] = (halfword >> 8) as u8;
     }
 
     /// Write a byte starting at the given address

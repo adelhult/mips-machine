@@ -149,10 +149,10 @@ impl<'a> Parser<'a> {
     }
 
     fn place_word(&mut self, word: u32) -> Result<(), Error> {
-        self.place_byte(word as u8)?;
-        self.place_byte((word >> 8) as u8)?;
-        self.place_byte((word >> 16) as u8)?;
         self.place_byte((word >> 24) as u8)?;
+        self.place_byte((word >> 16) as u8)?;
+        self.place_byte((word >> 8) as u8)?;
+        self.place_byte(word as u8)?;
         Ok(())
     }
 
