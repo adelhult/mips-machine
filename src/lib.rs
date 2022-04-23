@@ -1,3 +1,18 @@
+//! A small experiment to learn more about MIPS. This repo includes a a virtual machine/mips simulator,
+//! and assembler.
+//!
+//! # Example usage of the library:
+//! ```
+//! use mips_machine::*;
+//! let program = "addi $t0, $zero, 10";
+//!
+//! let (memory, _) = Parser::new(program).assemble().unwrap();
+//! let mut machine = Machine::from(memory);
+//!
+//! assert_eq!(machine.step(), Ok(Instruction::Addi(Register::Zero, Register::T0, 10)));
+//! assert_eq!(machine.read_register(Register::T0), 10);
+//! ```
+
 mod assembler;
 mod error;
 mod instructions;
