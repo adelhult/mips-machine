@@ -42,7 +42,7 @@ msg:    .asciiz "Hello world!"
         .text 
 main:
         la $t0, msg     # Load a pointer to the string in $t0 
-        li $t1, 12284   # Load the address of the output in $t1
+        li $t1, 0x2FFC  # Load the address of the output in $t1
         sw $t0, 0($t1)  # Store the pointer to the string at 
                         # the addr of the output. 
 ```

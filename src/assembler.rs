@@ -1,4 +1,5 @@
 use crate::{Error, Instruction, Register, DATA_BASE_ADDRESS, MEMORY_SIZE, TEXT_BASE_ADDRESS};
+use num_traits::Num;
 use std::{
     collections::HashMap,
     str::{Chars, FromStr},
@@ -144,6 +145,32 @@ impl<'a> Parser<'a> {
             .map_err(|_| Error::BadOperand(error_msg.into()))
     }
 
+    /// Attempt to consume a number literal
+    fn try_consume_number<T: Num + FromStr>(&mut self, error_msg: &str) -> Result<T, Error> {
+        let token = self
+            .consume_token()
+            .ok_or_else(|| Error::BadOperand(error_msg.to_string()))?;
+
+        // is it a literal written in decimal form?
+        if let Ok(number) = token.parse::<T>() {
+            return Ok(number);
+        }
+
+        // is it a hex literal 0x...?
+        if let Some(number) = token.strip_prefix("0x") {
+            return T::from_str_radix(number, 16)
+                .map_err(|_| Error::BadOperand(error_msg.to_string()));
+        }
+
+        // is it a binary literal 0b...?
+        if let Some(number) = token.strip_prefix("0b") {
+            return T::from_str_radix(number, 2)
+                .map_err(|_| Error::BadOperand(error_msg.to_string()));
+        }
+
+        todo!()
+    }
+
     fn try_consume_register(&mut self, error_msg: &str) -> Result<Register, Error> {
         Register::try_from(self.try_consume_operand::<String>(error_msg)?.as_str())
     }
@@ -217,7 +244,8 @@ impl<'a> Parser<'a> {
                 Ok(())
             }
             "byte" => {
-                let byte: u8 = self.try_consume_operand(".byte takes a byte as an operand")?;
+                let byte: u8 =
+                    self.try_consume_number::<i8>(".byte takes a byte as an operand")? as u8;
                 self.place_byte(byte)?;
                 Ok(())
             }
@@ -227,13 +255,14 @@ impl<'a> Parser<'a> {
             }
             "globl" => Ok(()), // NOTE: this assembler has no notion of scope,
             "half" => {
-                let half: u16 = self.try_consume_operand(".half takes a halfword as an operand")?;
+                let half: u16 =
+                    self.try_consume_number::<i16>(".half takes a halfword as an operand")? as u16;
                 self.place_byte(half as u8)?;
                 self.place_byte((half >> 8) as u8)?;
                 Ok(())
             }
             "space" => {
-                let n: u8 = self.try_consume_operand(".space takes an integer as an operand")?;
+                let n: u8 = self.try_consume_number(".space takes an integer as an operand")?;
                 for _ in 0..n {
                     self.place_byte(0)?;
                 }
@@ -244,8 +273,9 @@ impl<'a> Parser<'a> {
                 Ok(())
             }
             "word" => {
-                let word: u32 =
-                    self.try_consume_operand(".word takes a 32-bit word as an operand")?;
+                let word: u32 = self
+                    .try_consume_number::<i32>(".word takes a 32-bit word as an operand")?
+                    as u32;
                 self.place_word(word)?;
                 Ok(())
             }
@@ -359,7 +389,7 @@ impl<'a> Parser<'a> {
             "lui" => {
                 // lui rt, imm
                 let rt = self.try_consume_register("lui needs a register \"rt\"")?;
-                let imm = self.try_consume_operand("lui needs a immediate value")?;
+                let imm = self.try_consume_number("lui needs a immediate value")?;
                 Ok(vec![Instruction::Lui(Register::Unused, rt, imm)])
             }
             "ori" => self.parse_i_format(Ori),
@@ -372,7 +402,7 @@ impl<'a> Parser<'a> {
             "li" => {
                 // li rs, imm
                 let r = self.try_consume_register("li needs a register")?;
-                let imm: u32 = self.try_consume_operand("li needs a imm value")?;
+                let imm: u32 = self.try_consume_number::<i32>("li needs a imm value")? as u32;
                 if let Ok(value) = u16::try_from(imm) {
                     Ok(vec![Addi(Register::Zero, r, value as i16)])
                 } else {
@@ -426,7 +456,7 @@ impl<'a> Parser<'a> {
     /// Helper function to parse function like `lb rt, offset(base)`
     fn parse_offset_format(&mut self, op: IOperator) -> Result<Vec<Instruction>, Error> {
         let rt = self.try_consume_register("The instruction needs a register \"rt\"")?;
-        let offset = self.try_consume_operand("The instruction needs a register \"offset\"")?;
+        let offset = self.try_consume_number("The instruction needs a register \"offset\"")?;
         let base = self.try_consume_register("The instruction needs a register \"base\"")?;
         Ok(vec![op(base, rt, offset)])
     }
@@ -444,7 +474,7 @@ impl<'a> Parser<'a> {
 
         let shift = match default_shift {
             Some(default) => default,
-            None => self.try_consume_operand("The instruction needs a shift amount")?,
+            None => self.try_consume_number("The instruction needs a shift amount")?,
         };
 
         Ok(vec![op(rs, rt, rd, shift)])
@@ -455,7 +485,7 @@ impl<'a> Parser<'a> {
         let rt = self.try_consume_register("The instruction needs a register \"rt\"")?;
         let rs = self.try_consume_register("The instruction needs a register \"rs\"")?;
 
-        let imm = self.try_consume_operand("The instruction needs a immediate value")?;
+        let imm = self.try_consume_number("The instruction needs a immediate value")?;
         Ok(vec![op(rs, rt, imm)])
     }
 }
@@ -490,7 +520,7 @@ mod tests {
 
     #[test]
     fn word_directive() {
-        let source = ".byte 1\n.data\n.byte 2\n.byte 3";
+        let source = ".byte 1\n.data\n.byte 0x2\n.byte 0b11";
         let (memory, _) = Parser::new(source).assemble().unwrap();
         assert_eq!(memory[TEXT_BASE_ADDRESS], 1);
         assert_eq!(memory[DATA_BASE_ADDRESS], 2);
