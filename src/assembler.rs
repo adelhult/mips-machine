@@ -123,7 +123,7 @@ impl<'a> Parser<'a> {
             }
 
             // extra whitespaces characters should be skipped
-            if c.is_whitespace() {
+            if c.is_whitespace() && !self.in_string {
                 continue;
             }
             // finally, we can add the character to the current token
@@ -369,6 +369,31 @@ impl<'a> Parser<'a> {
             "sltiu" => self.parse_i_format(Sltiu),
             "sw" => self.parse_offset_format(Sw),
             "nop" => Ok(vec![Sll(Register::Zero, Register::Zero, Register::Zero, 0)]),
+            "li" => {
+                // li rs, imm
+                let r = self.try_consume_register("li needs a register")?;
+                let imm: u32 = self.try_consume_operand("li needs a imm value")?;
+                if let Ok(value) = u16::try_from(imm) {
+                    Ok(vec![Addi(Register::Zero, r, value as i16)])
+                } else {
+                    // the imm value does not fit in the 16 bits of a single addi,
+                    // use both lui and ori instead
+                    Ok(vec![
+                        Lui(Register::Zero, r, (imm >> 16) as i16),
+                        Ori(r, r, (imm & 0xffff) as i16),
+                    ])
+                }
+            }
+            "la" => {
+                // la rs, label
+                let r = self.try_consume_register("la needs a register")?;
+                let label: String = self.try_consume_operand("la needs a label")?;
+                let addr = self.get_addr(&label)?;
+                Ok(vec![
+                    Lui(Register::Zero, r, (addr >> 16) as i16),
+                    Ori(r, r, (addr & 0xffff) as i16),
+                ])
+            }
             token => Err(Error::Syntax(format!("Unknown token \"{token}\""))),
         }
     }
@@ -465,11 +490,11 @@ mod tests {
 
     #[test]
     fn word_directive() {
-        let source = ".word 1\n.data\n.word 2\n.word 3";
+        let source = ".byte 1\n.data\n.byte 2\n.byte 3";
         let (memory, _) = Parser::new(source).assemble().unwrap();
         assert_eq!(memory[TEXT_BASE_ADDRESS], 1);
         assert_eq!(memory[DATA_BASE_ADDRESS], 2);
-        assert_eq!(memory[DATA_BASE_ADDRESS + 4], 3);
+        assert_eq!(memory[DATA_BASE_ADDRESS + 1], 3);
     }
 
     #[test]

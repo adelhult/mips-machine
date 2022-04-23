@@ -206,8 +206,7 @@ fn step(machine: &mut Machine, n: u32) {
                 red_ln!("Error: {}.", msg);
             }
             Ok(instruction) => {
-                let i = instruction;
-                green_ln!("Executed {}", i);
+                green_ln!("Executed {}", instruction);
             }
         }
     }

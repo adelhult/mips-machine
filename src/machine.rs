@@ -3,8 +3,9 @@ use crate::instructions::*;
 
 pub const MEMORY_SIZE: usize = 0x7FFF; // 4096 bytes
 pub const STACK_BASE_ADDRESS: usize = 0x7FFF;
-pub const HEAP_BASE_ADDRESS: usize = 0x3000;
-pub const DATA_BASE_ADDRESS: usize = 0x2000;
+pub const HEAP_BASE_ADDRESS: usize = 0x4000;
+pub const DATA_BASE_ADDRESS: usize = 0x3000;
+pub const OUTPUT_ADDRESS: usize = 0x2FFC;
 pub const TEXT_BASE_ADDRESS: usize = 0x0000;
 
 pub struct Machine {
@@ -86,17 +87,32 @@ impl Machine {
         self.memory[address + 2] = (word >> 8) as u8;
         self.memory[address + 1] = (word >> 16) as u8;
         self.memory[address] = (word >> 24) as u8;
+
+        // if they wrote to the output, print it!
+        if (OUTPUT_ADDRESS..OUTPUT_ADDRESS + 3).contains(&address) {
+            self.print(self.read_word(OUTPUT_ADDRESS) as usize);
+        }
     }
 
     /// Write a halfword starting at the given halfword-aligned address
     pub fn write_halfword(&mut self, address: usize, halfword: u16) {
         self.memory[address + 1] = halfword as u8;
         self.memory[address] = (halfword >> 8) as u8;
+
+        // if they wrote to the output, print it!
+        if (OUTPUT_ADDRESS..OUTPUT_ADDRESS + 1).contains(&address) {
+            self.print(self.read_word(address) as usize);
+        }
     }
 
     /// Write a byte starting at the given address
     pub fn write_byte(&mut self, address: usize, byte: u8) {
         self.memory[address] = byte;
+
+        // if they wrote to the output, print it!
+        if OUTPUT_ADDRESS == address {
+            self.print(self.read_word(address) as usize);
+        }
     }
 
     /// A helper function to perform a operation on two registers and
@@ -386,6 +402,7 @@ impl Machine {
                 self.write_word(dest_adr as usize, self.read_register(rt));
             }
         }
+
         Ok(instruction)
     }
 
@@ -401,6 +418,17 @@ impl Machine {
             return;
         }
         self.registers[r as usize] = value;
+    }
+
+    /// Print a zero terminated ascii string starting at a given memory address
+    fn print(&self, address: usize) {
+        let mut text = String::new();
+        let mut i = 0;
+        while self.read_byte(address + i) != 0 {
+            text.push(self.read_byte(address + i) as char);
+            i += 1;
+        }
+        println!("{}", text);
     }
 }
 
