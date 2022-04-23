@@ -35,7 +35,7 @@ If you wish to print something to the terminal. You can put an address to a zero
 memory and it will be outputed to your stdout.
 
 A simple print procedure could be implemented like this:
-```asm
+```s
         .data
 msg:    .asciiz "Hello world!"
 
