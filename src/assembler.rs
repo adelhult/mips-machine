@@ -20,6 +20,7 @@ pub struct Parser<'a> {
     source: Chars<'a>,
     in_string: bool,
     in_escape: bool,
+    in_comment: bool,
     labels: Labels,
     memory: [u8; MEMORY_SIZE],
 }
@@ -33,6 +34,7 @@ impl<'a> Parser<'a> {
             active_cursor: Cursor::Text,
             in_string: false,
             in_escape: false,
+            in_comment: false,
             source: source.chars(),
             labels: HashMap::new(),
             memory: [0; MEMORY_SIZE],
@@ -61,10 +63,24 @@ impl<'a> Parser<'a> {
         Ok((self.memory, self.labels))
     }
 
+    /// Consume a token from the input text
+    /// TODO: rewrite this in a cleaner way using seperate functions that take a peekable
+    /// iterator, instead of having all these flags like I currently have (in_comment, in_string...)
     fn consume_token(&mut self) -> Option<String> {
         let mut token = String::new();
 
         for c in self.source.by_ref() {
+            if self.in_comment {
+                if c == '\n' {
+                    self.in_comment = false;
+                    // don't just to the next token so that the \n
+                    // also can act as a token delim
+                } else {
+                    // ignore everything inside comments
+                    continue;
+                }
+            }
+
             // start espace sequence
             if c == '\\' {
                 self.in_escape = true;
@@ -85,6 +101,12 @@ impl<'a> Parser<'a> {
 
             if c == '"' {
                 self.in_string = !self.in_string;
+                continue;
+            }
+
+            // comments start with a pound sign
+            if c == '#' {
+                self.in_comment = true;
                 continue;
             }
 
