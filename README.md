@@ -1,4 +1,21 @@
 # MIPS Virtual Machine
+A small experiment to learn more about MIPS. This repo includes a
+a virtual machine/mips simulator, an assembler and a REPL-style tool.
+
+You can load and assemble a file by running
+```
+$ machine program.asm
+```
+
+...or directly load a memory file
+```
+$ machine memory.mem
+```
+
+The implementation is loosely based on the [MIPS Architecture for Programmers
+Volume II-A: The MIPS32 Instruction
+Set Manual](https://s3-eu-west-1.amazonaws.com/downloads-mips/documents/MD00086-2B-MIPS32BIS-AFP-6.06.pdf). However, there is close to no 
+test coverage so expect a lot of things to be broken.
 
 ## Memory layout
 The memory is 4096 bytes large by default.
@@ -12,8 +29,9 @@ The memory is 4096 bytes large by default.
 
 When creating a new machine `$sp` will point to the stack base address and `$gp` will point to the data base address. Use the `.data` and `.text` assembly directives to place your program data in the right place. The program will start at the label "main" if there is one, otherwise it will start at the text base address.
 
-## Assembly language
-The following directives are supported (Note that all of them only support a single operand (no lists are allowed):
+# Assembly language
+## Directives
+The following directives are supported:
 * ascii
 * asciiz
 * byte
@@ -24,3 +42,44 @@ The following directives are supported (Note that all of them only support a sin
 * text
 * word
 * TODO: align
+
+## Instruction
+The following instruction are all implemented (although, definitely not tested).
+* **add** rd, rs, rt
+* **addi** rt, rs, imm
+* **addiu** rt, rs, imm
+* **addu** rd, rs, rt
+* **and** rd, rs, rt
+* **andi** rt, rs, imm
+* **beq** rs, rt, offset
+* **bne** rs, rt, offset
+* **bgtz** rs, label
+* **div** rd, rs, rt
+* **mod** rd, rs, rt
+* **divu** rd, rs, rt
+* **modu** rd, rs, rt
+* **j** label
+* **jal** label
+* **jalr** rd, rs
+* **jr** rs
+* **lb** rt, offset(base)
+* **lbu** rt, offset(base)
+* **lhu** rt, offset(base)
+* **lui** rt, imm
+* **lw** rt, offset(base)
+* **nor** rd, rs, rt
+* **xor** rd, rs, rt
+* **or** rd, rs, rt
+* **ori** rt, rs, imm
+* **sb** rt offset(base)
+* **sh** rt offset(base)
+* **slt** rd, rs, rt
+* **slti** rt, rs, imm
+* **sltiu** rt, rs, imm
+* **sltu** rd, rs, rt
+* **sll** rd, rt, sa
+* **srl** rd, rt, sa
+* **sra** rd, rt, sa
+* **sub** rd, rs, rt
+* **subu** rd, rs, rt
+* **sw** rt, offset(base)
