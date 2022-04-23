@@ -201,21 +201,17 @@ impl Machine {
             }
 
             // NOTE: The Jump instruction has been deprecated in Release 6. Use BC instead.
-            // TODO: Control Transfer Instructions (CTIs) should not be placed in branch delay slots or Release 6 forbidden slots.
-            // TODO: Jump to the effective target address. Execute the instruction that follows the jump, in the branch delay slot,
-            // before executing the jump itself.
             Instruction::J(instr_index) => {
-                let dest_adr = (self.read_pc() << 28) | (instr_index << 2);
+                let part_of_pc = self.read_pc() & 0b11110000000000000000000000000000;
+                let dest_adr = part_of_pc | (instr_index << 2);
                 self.set_pc(dest_adr);
             }
 
             // NOTE: The Jump-and-Link instruction has been deprecated in Release 6. Use BALC instead.
-            // TODO: Control Transfer Instructions (CTIs) should not be placed in branch delay slots or Release 6 forbidden slots.
-            // TODO: Release 6: If a control transfer instruction (CTI) is executed in the delay slot of a branch or jump,
-            // Release 6 implementations are required to signal a Reserved Instruction exception.
             Instruction::Jal(instr_index) => {
                 self.set_register(Register::Ra, self.read_pc());
-                let dest_adr = (self.read_pc() << 28) | (instr_index << 2);
+                let part_of_pc = self.read_pc() & 0b11110000000000000000000000000000;
+                let dest_adr = part_of_pc | (instr_index << 2);
                 self.set_pc(dest_adr);
             }
 

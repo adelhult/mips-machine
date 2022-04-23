@@ -570,6 +570,7 @@ fn to_i_format(opcode: u8, rs: Register, rt: Register, imm: i16) -> u32 {
     let opcode = (opcode as u32) << 26;
     let rs = (rs as u32) << 21;
     let rt = (rt as u32) << 16;
+    let imm = imm as u32 & 0xFFFF;
 
     opcode | rs | rt | (imm as u32)
 }
@@ -587,10 +588,12 @@ impl fmt::Display for Instruction {
                 Addu(rs, rt, rd, _) => format!("addu {rd}, {rs}, {rt}"),
                 And(rs, rt, rd, _) => format!("and {rd}, {rs}, {rt}"),
                 Andi(rs, rt, imm) => format!("andi {rt}, {rs}, {imm}"),
-                Beq(rs, rt, offset) => format!("beq {rs}, {rt}, offset:{offset}"),
-                Blez(rs, _, offset) => format!("blez {rs}, offset:{offset}"),
-                Bne(rs, rt, offset) => format!("bne {rs}, {rt}, offset:{offset}"),
-                Bgtz(rs, _, offset) => format!("bgtz {rs}, offset:{offset}"),
+                Beq(rs, rt, offset) =>
+                    format!("beq {rs}, {rt}, offset:{offset}", offset = offset << 2),
+                Blez(rs, _, offset) => format!("blez {rs}, offset:{offset}", offset = offset << 2),
+                Bne(rs, rt, offset) =>
+                    format!("bne {rs}, {rt}, offset:{offset}", offset = offset << 2),
+                Bgtz(rs, _, offset) => format!("bgtz {rs}, offset:{offset}", offset = offset << 2),
                 DivOLD(_, _, _, _) => "divOLD".to_string(),
                 Div(rs, rt, rd, _) => format!("div {rd}, {rs}, {rt}"),
                 Mod(rs, rt, rd, _) => format!("mod {rd}, {rs}, {rt}"),

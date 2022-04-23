@@ -88,8 +88,15 @@ impl<'a> Parser<'a> {
                 continue;
             }
 
-            // tokens are delim. by whitespace or break lines or a comma
-            if !self.in_string && !token.is_empty() && (c.is_whitespace() || c == ',') {
+            // tokens are delim. by whitespace or break lines, a parenthesis or a comma
+            // FIXME: It is a really hacky solution to treat '(' and ')' as delimeters
+            // instead of individual tokens. It works fine when parsing things like
+            // `lb rt, offset(base)` but it also allows for `lb rt, offset, base`
+            // or horrendous things like `addi(rs(rt))10`.
+            if !self.in_string
+                && !token.is_empty()
+                && (c.is_whitespace() || c == ',' || c == '(' || c == ')')
+            {
                 return Some(token.trim().to_string());
             }
 
@@ -274,40 +281,107 @@ impl<'a> Parser<'a> {
             "subu" => self.parse_r_format(Subu, Some(0)),
             "j" => {
                 let target_label: String = self.try_consume_operand("J needs a label")?;
-                let target_addr = self
-                    .labels
-                    .get(&target_label)
-                    .ok_or(Error::UndefinedLabel(target_label))?;
-                todo!() // calculate the addr based on the cursor
+                let instr_index = self.calc_jump_offset(target_label)?;
+                Ok(vec![Jal(instr_index as u32)])
             }
             "jal" => {
                 let target_label: String = self.try_consume_operand("J needs a label")?;
-                let target_addr = self
-                    .labels
-                    .get(&target_label)
-                    .ok_or(Error::UndefinedLabel(target_label))?;
-                todo!() // TODO: calculate the addr based on the cursor
+                let instr_index = self.calc_jump_offset(target_label)?;
+                Ok(vec![Jal(instr_index as u32)])
             }
             "addi" => self.parse_i_format(Addi),
             "addiu" => self.parse_i_format(Addiu),
             "andi" => self.parse_i_format(Andi),
-            "beq" => todo!(),
-            "blez" => todo!(),
-            "bne" => todo!(),
-            "bgtz" => todo!(),
-            "lb" => todo!(),
-            "lbu" => todo!(),
-            "lhu" => todo!(),
-            "lw" => todo!(),
-            "lui" => todo!(),
-            "ori" => todo!(),
-            "sb" => todo!(),
-            "sh" => todo!(),
-            "slti" => todo!(),
-            "sltiu" => todo!(),
-            "sw" => todo!(),
+            "beq" => {
+                // beq rs, rt, label
+                let rs = self.try_consume_register("beq needs a register \"rs\"")?;
+                let rt = self.try_consume_register("beq needs a register \"rt\"")?;
+                let label = self.try_consume_operand("beq needs a label")?;
+
+                Ok(vec![Beq(rs, rt, self.calc_branch_offset(label)?)])
+            }
+            "blez" => {
+                // blez rs, label
+                let rs = self.try_consume_register("blez needs a register \"rs\"")?;
+                let label = self.try_consume_operand("bne needs a label")?;
+
+                Ok(vec![Blez(
+                    rs,
+                    Register::Unused,
+                    self.calc_branch_offset(label)?,
+                )])
+            }
+            "bne" => {
+                // bne rs, rt, label
+                let rs = self.try_consume_register("bne needs a register \"rs\"")?;
+                let rt = self.try_consume_register("bne needs a register \"rt\"")?;
+                let label = self.try_consume_operand("bne needs a label")?;
+
+                Ok(vec![Bne(rs, rt, self.calc_branch_offset(label)?)])
+            }
+            "bgtz" => {
+                // bgtz rs, label
+                let rs = self.try_consume_register("bgtz needs a register \"rs\"")?;
+                let label = self.try_consume_operand("bgtz needs a label")?;
+
+                Ok(vec![Bgtz(
+                    rs,
+                    Register::Unused,
+                    self.calc_branch_offset(label)?,
+                )])
+            }
+            "lb" => self.parse_offset_format(Lb),
+            "lbu" => self.parse_offset_format(Lbu),
+            "lhu" => self.parse_offset_format(Lhu),
+            "lw" => self.parse_offset_format(Lw),
+            "lui" => {
+                // lui rt, imm
+                let rt = self.try_consume_register("lui needs a register \"rt\"")?;
+                let imm = self.try_consume_operand("lui needs a immediate value")?;
+                Ok(vec![Instruction::Lui(Register::Unused, rt, imm)])
+            }
+            "ori" => self.parse_i_format(Ori),
+            "sb" => self.parse_offset_format(Sb),
+            "sh" => self.parse_offset_format(Sh),
+            "slti" => self.parse_i_format(Slti),
+            "sltiu" => self.parse_i_format(Sltiu),
+            "sw" => self.parse_offset_format(Sw),
+            "nop" => Ok(vec![Sll(Register::Zero, Register::Zero, Register::Zero, 0)]),
             token => Err(Error::Syntax(format!("Unknown token \"{token}\""))),
         }
+    }
+
+    fn get_addr(&self, label: &str) -> Result<usize, Error> {
+        self.labels
+            .get(label)
+            .ok_or_else(|| Error::UndefinedLabel(label.to_string()))
+            .map(|addr| *addr)
+    }
+
+    fn calc_jump_offset(&self, label: String) -> Result<usize, Error> {
+        let mask_26bit = 0x3ffffff;
+        let target_addr = self.get_addr(&label)?;
+        // "The low 28 bits of the target address is the instr_index field shifted left 2bits.
+        // The remaining upper bits are the corresponding bits of the
+        // address of the instruction in the delay slot (not the branch itself).""
+
+        Ok((target_addr >> 2) & mask_26bit)
+    }
+
+    fn calc_branch_offset(&self, label: String) -> Result<i16, Error> {
+        let target_addr = self.get_addr(&label)?;
+        let next_instr = self.current_cursor() + 4;
+        // "An 18-bit signed offset (the 16-bit offset field shifted left 2 bits) is added to the address of the instruction following
+        // the branch (not the branch itself), in the branch delay slot, to form a PC-relative effective target address.""
+        Ok(((target_addr - next_instr) >> 2) as i16)
+    }
+
+    /// Helper function to parse function like `lb rt, offset(base)`
+    fn parse_offset_format(&mut self, op: IOperator) -> Result<Vec<Instruction>, Error> {
+        let rt = self.try_consume_register("The instruction needs a register \"rt\"")?;
+        let offset = self.try_consume_operand("The instruction needs a register \"offset\"")?;
+        let base = self.try_consume_register("The instruction needs a register \"base\"")?;
+        Ok(vec![op(base, rt, offset)])
     }
 
     /// Helper function used to parse most of the r format instructions such as `add` and directly
@@ -344,8 +418,6 @@ type IOperator = fn(Register, Register, i16) -> Instruction;
 
 #[cfg(test)]
 mod tests {
-    use crate::Register;
-
     use super::*;
 
     #[test]
@@ -387,29 +459,5 @@ mod tests {
             memory[DATA_BASE_ADDRESS..DATA_BASE_ADDRESS + 3],
             ascii_string
         );
-    }
-
-    #[test]
-    fn r_format_instruction() {
-        let source = "add $t0, $zero, $t1";
-        let (memory, _) = Parser::new(source).assemble().unwrap();
-
-        let _result = u32::from_be_bytes([
-            memory[TEXT_BASE_ADDRESS],
-            memory[TEXT_BASE_ADDRESS + 1],
-            memory[TEXT_BASE_ADDRESS + 2],
-            memory[TEXT_BASE_ADDRESS + 3],
-        ]);
-        // todo!
-        //assert_eq!(
-        //    result,
-        //    u32::try_from(Instruction::Add(
-        //        Register::T1,
-        //        Register::Zero,
-        //        Register::T0,
-        //        0
-        //    ))
-        //    .unwrap()
-        //);
     }
 }
