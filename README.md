@@ -2,8 +2,6 @@
 A small experiment to learn more about MIPS. This repo includes a
 a virtual machine/mips simulator, an assembler and a REPL-style tool.
 
-<a href="https://asciinema.org/a/lxhkcMpUJJndMzb6HQaPgvd4K" target="_blank"><img width="50%" src="https://asciinema.org/a/lxhkcMpUJJndMzb6HQaPgvd4K.svg" /></a>
-
 You can load and assemble a file by running
 ```
 $ machine program.asm
