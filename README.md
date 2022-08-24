@@ -31,7 +31,7 @@ The memory is 4096 bytes large by default.
 When creating a new machine `$sp` will point to the stack base address and `$gp` will point to the data base address. Use the `.data` and `.text` assembly directives to place your program data in the right place. The program will start at the label "main" if there is one, otherwise it will start at the text base address.
 
 ## Output
-If you wish to print something to the terminal. You can put an address to a zero terminated string at `0x244c..0x2fff` in the 
+If you wish to print something to the terminal. You can put an address to a zero terminated string at `0x2ffc..0x2fff` in the 
 memory and it will be outputed to your stdout.
 
 A simple print procedure could be implemented like this:
